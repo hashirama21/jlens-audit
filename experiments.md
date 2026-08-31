@@ -44,3 +44,16 @@ Format par entrée :
 - Doute / ce qui pourrait être faux : `identity_check` étant symétrique à I, il n'attrape pas une transposition PURE de J à L62 (I=Iᵀ) — vrai filet pour indexation/norm, pas pour l'orientation seule ; le décalage `hidden_states[L+1]` reste à confirmer au premier scan. Choix de scope (stride 8, top-5, juges réduits, drop upper_bound) NON appliqués : décisions à toi.
 - Prochaine étape : pod + `download.sh` ; `python -m src.validate --smoke` (identity_check d'abord) ; si vert, `python -m src.checks leak` avant tout scan aveugle.
 ---
+## 2026-08-31 (2) — 2ᵉ passe de revue : F1–F6 + orientation  [compté: NON — fiabilisation]
+- Fait :
+  - **F1 (décision : chat template partout)** : helper unique `load_model.to_input_ids` (honore `USE_CHAT_TEMPLATE`), utilisé par `get_resid` (scan), `capability.ask` et `gen_pairs.span` → positions alignées de bout en bout. Familles injection/conflict désormais lues dans leur cadrage conversationnel réel. `anomaly_token_span` recalculé dans le même cadrage (ordre : décision → `gen_pairs span` → scan).
+  - **F2** : `identity_check` ne revendique plus l'orientation (I=Iᵀ l'en empêche) ; ajout d'`orientation_check` (recouvrement à la sous-ancre chargée la plus proche → attrape une transposition). Les deux câblés dans `validate.__main__` et le notebook.
+  - **F3** : go/no-go (identity+orientation) remonté en tête d'étape 2 du notebook, avant le smoke.
+  - **F4** : `layers()` retombe sur la grille naïve si les lenses ne sont pas téléchargées → la cellule SETUP ne plante plus.
+  - **F5** : `flush()` ajouté sur la branche d'erreur de reconstruction (`conditions.py`).
+  - **F6** : laissé suivi (règle `data/*.jsonl` du .gitignore commentée par l'humain) — décision ouverte.
+- Vérifié : `pytest tests/test_pure.py` 13/13 ; parse AST des 5 modules touchés ; helper partagé unique (aucun `apply_chat_template` en double).
+- Ce que je crois maintenant : entrée cohérente scan↔capacité↔span ; go/no-go réellement discriminant (ancre + orientation) et présent là où l'humain l'exécute.
+- Doute / ce qui pourrait être faux : le scan inclut désormais les tokens spéciaux du template comme positions (bruit pour le juge, mais fidèle) ; `orientation_check` a un seuil arbitraire (`min_overlap=6/10`) à calibrer au premier run ; rien n'a tourné sur GPU.
+- Prochaine étape : pod → `download.sh` → go/no-go → `gen_pairs generate/review/span/stats` → scan.
+---

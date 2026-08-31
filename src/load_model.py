@@ -5,7 +5,7 @@ the scripts (which reload — acceptable for background runs).
 tests can run on a laptop."""
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from .config import MODEL_DIR, LAYER_STRIDE, N_LAYERS, TARGET_LAYER
+from .config import MODEL_DIR, LAYER_STRIDE, N_LAYERS, TARGET_LAYER, USE_CHAT_TEMPLATE
 
 _state = {}
 
@@ -49,12 +49,21 @@ def unembed_parts():
     return model.lm_head.weight, model.model.norm
 
 
+def to_input_ids(tok, content, *, add_generation_prompt=False):
+    """Single source of truth for turning a corpus text into model input ids (1, seq).
+    Honours USE_CHAT_TEMPLATE so scan, capability probe and span share one framing."""
+    if USE_CHAT_TEMPLATE:
+        return tok.apply_chat_template([{"role": "user", "content": content}],
+                                       add_generation_prompt=add_generation_prompt, return_tensors="pt")
+    return tok(content, return_tensors="pt")["input_ids"]
+
+
 @torch.no_grad()
 def get_resid(text, layer_list=None):
     """dict layer -> (seq, d) residual stream (bf16, on GPU), plus the input token ids.
-    Convention: hidden_states[0] = embeddings, hidden_states[L+1] = output of block L.  # ADAPTER if needed."""
+    Convention: hidden_states[0] = embeddings, hidden_states[L+1] = output of block L."""
     tok, model = load()
     layer_list = layer_list or layers()
-    ids = tok(text, return_tensors="pt").to(model.device)
-    out = model(**ids, output_hidden_states=True)
-    return {L: out.hidden_states[L + 1][0] for L in layer_list}, ids["input_ids"][0]
+    ids = to_input_ids(tok, text).to(model.device)
+    out = model(input_ids=ids, output_hidden_states=True)
+    return {L: out.hidden_states[L + 1][0] for L in layer_list}, ids[0]

@@ -94,11 +94,13 @@ def stats(path="pairs.jsonl"):
 
 
 def span(path="pairs.jsonl"):
-    from .load_model import load_tok
+    """Anomaly token span in the SAME framing the scan uses (USE_CHAT_TEMPLATE), so
+    checks.evidence / upper_bound index the right positions. Re-run after flipping the flag."""
+    from .load_model import load_tok, to_input_ids
     tok = load_tok()
     items = store.load_jsonl(DATA / path)
     for p in items:
-        a, b = tok(p["anomalous"])["input_ids"], tok(p["clean"])["input_ids"]
+        a, b = to_input_ids(tok, p["anomalous"])[0].tolist(), to_input_ids(tok, p["clean"])[0].tolist()
         ch = [(i1, i2) for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(a=a, b=b).get_opcodes() if tag != "equal"]
         if ch:
             p["anomaly_token_span"] = [ch[0][0], ch[-1][1] - 1]

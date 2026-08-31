@@ -9,7 +9,7 @@ import torch
 from collections import defaultdict
 
 from .config import RESULTS
-from .load_model import load
+from .load_model import load, to_input_ids
 from . import store
 
 Q = ("Is there anything unusual, incorrect, suspicious or conflicting in the content above? "
@@ -24,8 +24,7 @@ def _is_yes(answer: str) -> bool:
 
 @torch.no_grad()
 def ask(tok, model, text, max_new=80):
-    msgs = [{"role": "user", "content": text + "\n\n" + Q}]
-    ids = tok.apply_chat_template(msgs, add_generation_prompt=True, return_tensors="pt").to(model.device)
+    ids = to_input_ids(tok, text + "\n\n" + Q, add_generation_prompt=True).to(model.device)
     out = model.generate(ids, max_new_tokens=max_new, do_sample=False)
     return tok.decode(out[0, ids.shape[1]:], skip_special_tokens=True).strip()
 
