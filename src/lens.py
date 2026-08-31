@@ -1,32 +1,42 @@
 """The three instruments under a common interface: readout(h, layer, k) -> top-k tokens.
 
     logit : final_norm(h) @ W_U^T
-    jlens : final_norm(M_L @ h) @ W_U^T   with M_L the J-lens matrix of layer L
+    jlens : final_norm(J_L @ h) @ W_U^T   with J_L the J-lens Jacobian of layer L
     rlens : same with the R-lens matrix
 
-# ADAPTER (mandatory, read lenses/README.md of the camilablank/workspace-lenses repo):
-  - file name and format per layer (safetensors? .pt? one file per layer or a single file?)
-  - is the matrix (d, d) applied to h, or already (vocab, d) (in which case W_U is included)?
-  - is there a bias? is the final norm already folded into the matrix?
-  - does lens layer L correspond to hidden_states[L+1] (output of block L)?
-The conformity test (src/validate.py --smoke) must pass before going any further.
+Format resolved against lenses/README.md (camilablank/workspace-lenses):
+  - ONE torch file per lens: <LENS_DIR>/{j-lens,r-lens}/lens.pt, a dict with keys
+    ['J', 'n_prompts', 'source_layers', 'd_model', 'provenance']. J is the stack of
+    per-layer Jacobians; row i corresponds to source_layers[i].
+  - readout is softmax(W_U . norm(J_L . h)): J_L is (d, d) applied to h (NOT (vocab, d)),
+    there is NO bias, and the final norm is NOT folded in (we apply self.final_norm here).
+  - the anchor row at source_layers == TARGET_LAYER is exactly I, so at L=TARGET_LAYER
+    both lenses degenerate to the logit lens (see src/validate.py identity_check).
+The go/no-go test (src/validate.py identity_check) must pass before going any further.
 """
 import torch
-from safetensors.torch import load_file
 
 from .load_model import load, unembed_parts, layers
 from .config import LENS_DIR
 
+# One lens.pt per kind, loaded once: (J stack, {source_layer -> row index}, full dict).
+_STACKS: dict = {}
+_SUBDIR = {"jlens": "j-lens", "rlens": "r-lens"}
+
+
+def _stack(kind: str):
+    if kind not in _STACKS:
+        d = torch.load(LENS_DIR / _SUBDIR[kind] / "lens.pt", map_location="cpu", weights_only=False)
+        idx = {int(sl): i for i, sl in enumerate(d["source_layers"])}
+        _STACKS[kind] = (d["J"], idx, d)
+    return _STACKS[kind]
+
 
 def _load_layer_map(kind: str, L: int) -> torch.Tensor:
-    # ADAPTER: path and key per README. Plausible candidates below, to be corrected.
-    cands = [LENS_DIR / f"{kind}_layer{L}.safetensors", LENS_DIR / kind / f"layer_{L}.safetensors"]
-    for c in cands:
-        if c.exists():
-            sd = load_file(str(c))
-            key = "weight" if "weight" in sd else next(iter(sd))
-            return sd[key]
-    raise FileNotFoundError(f"Lens {kind} layer {L} not found — read lenses/README.md (candidates: {cands})")
+    J, idx, _ = _stack(kind)
+    if L not in idx:
+        raise KeyError(f"layer {L} absent from {kind} source_layers (skip_first=4); available: {sorted(idx)}")
+    return J[idx[L]]
 
 
 class Lens:
@@ -46,8 +56,8 @@ class Lens:
         if self.kind == "logit":
             z = self.final_norm(H_L)
         else:
-            z = H_L @ self.maps[L].T   # ADAPTER: confirm matrix orientation and whether norm is folded in
-            z = self.final_norm(z)     # ADAPTER: drop this line if the lens already includes the final norm
+            z = H_L @ self.maps[L].T   # J_L . h per row (norm not folded into J)
+            z = self.final_norm(z)     # explicit norm() from the readout formula
         return z @ self.W_U.T
 
     @torch.no_grad()

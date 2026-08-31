@@ -1,14 +1,28 @@
-"""Step 3 — quantitative validation that the lenses work (test 1 of the go/no-go).
-   --smoke : conformity test 'sushi -> Japan' (R-lens post: R from ~L2, J around ~L14 — order of magnitude).
+"""Step 3 — quantitative validation that the lenses work.
+   identity_check : the real go/no-go — runs first in every mode (binary, free, decisive).
+   --smoke : soft conformity test 'sushi -> Japan' (R-lens post: R from ~L2, J around ~L14 — order of magnitude).
    otherwise: pass@10 per layer on data/multihop.jsonl (generate via the agent, filtered: the model answers correctly)."""
 import json
 import argparse
 
 import matplotlib.pyplot as plt
 
-from .config import DATA, RESULTS, FIGS, TOP_K
+from .config import DATA, RESULTS, FIGS, TOP_K, TARGET_LAYER
 from .load_model import get_resid, layers, load
 from .lens import load_all
+
+
+def identity_check(lenses, target=TARGET_LAYER, k=5):
+    """Go/no-go: at the anchor layer the J/R Jacobian row is exactly I, so both lenses
+    must reproduce the logit lens exactly. Catches norm folding and, above all, the
+    source_layers indexing / hidden_states[L+1] convention in one shot. Compare top-5
+    (not top-10): bf16 noise can reorder near-ties in the tail."""
+    H, _ = get_resid("The capital of France is", [target])
+    ref = lenses["logit"].readout_all(H[target], target, k)
+    for kind in ("jlens", "rlens"):
+        got = lenses[kind].readout_all(H[target], target, k)
+        assert got == ref, f"{kind} != logit at L{target}: wrong orientation / norm / indexing"
+    print(f"OK — identity anchor validated at L{target} (top-{k} match)")
 
 
 def find_pos(text, tok, pivot):
@@ -86,4 +100,5 @@ if __name__ == "__main__":
     ap.add_argument("--smoke", action="store_true")
     a = ap.parse_args()
     lenses = load_all()
+    identity_check(lenses)   # go/no-go, must pass before anything else
     smoke(lenses) if a.smoke else pass_at_k(lenses)

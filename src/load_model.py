@@ -5,7 +5,7 @@ the scripts (which reload — acceptable for background runs).
 tests can run on a laptop."""
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from .config import MODEL_DIR, LAYER_STRIDE
+from .config import MODEL_DIR, LAYER_STRIDE, N_LAYERS, TARGET_LAYER
 
 _state = {}
 
@@ -21,16 +21,21 @@ def load(dtype=torch.bfloat16, device_map="cuda"):
     if "model" in _state:
         return _state["tok"], _state["model"]
     tok = load_tok()
-    model = AutoModelForCausalLM.from_pretrained(str(MODEL_DIR), torch_dtype=dtype, device_map=device_map)
+    model = AutoModelForCausalLM.from_pretrained(str(MODEL_DIR), dtype=dtype, device_map=device_map)
     model.eval()
     _state["model"] = model
     return tok, model
 
 
 def layers():
-    _, model = load()
-    n = model.config.num_hidden_layers
-    return list(range(0, n, LAYER_STRIDE))
+    """Scan grid, gated by the lens source_layers (skip_first=4 removes layers 0..3),
+    with TARGET_LAYER always included: it is the identity anchor and the key test."""
+    from .lens import _stack
+    src = set(_stack("jlens")[1])            # source_layers available in the J stack
+    grid = [L for L in range(0, N_LAYERS, LAYER_STRIDE) if L in src]
+    if TARGET_LAYER not in grid and TARGET_LAYER in src:
+        grid.append(TARGET_LAYER)
+    return sorted(grid)
 
 
 def unembed_parts():

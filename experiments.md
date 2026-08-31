@@ -30,3 +30,17 @@ Format par entrée :
 - Doute / ce qui pourrait être faux : rien n'a tourné sur GPU ni contre un vrai juge ; Δ2 confond « lens inversible » et « juge bon reconstructeur » (à ajouter §5.4) ; budget contexte réel = 12 couches (stride 4), à trancher (stride 6 vs top-5).
 - Prochaine étape : pod + download ; lire `lenses/README.md` ; résoudre les `# ADAPTER` avec moi ; smoke test `sushi → Japan`.
 ---
+## 2026-08-31 — Résolution des `# ADAPTER` + 4 bugs bloquants (revue externe)  [compté: NON — fiabilisation, aucun résultat de recherche]
+- Fait :
+  - README HF (camilablank/workspace-lenses) lu et confirmé par WebFetch. Format tranché : UN `lens.pt` par lens (`{j-lens,r-lens}/lens.pt`), dict `['J','n_prompts','source_layers','d_model','provenance']` ; formule `softmax(W_U · norm(J_ℓ · h_ℓ))` → pas de biais, norm NON repliée (on garde `self.final_norm`), orientation `H @ J.T` correcte, ancre identité à `target_layer=62`.
+  - **B1** `lens.py` : abandon du safetensors par couche ; `_stack(kind)` charge le `.pt` unique et mappe `source_layers → index` ; `_load_layer_map` renvoie `J[idx[L]]`, KeyError explicite si couche absente (skip_first=4).
+  - **B2** `config.py` : archi réelle centralisée — `N_LAYERS=64`, `D_MODEL=5120`, `TARGET_LAYER=62`, `SKIP_FIRST=4` (le commentaire « ~48 couches / ~12 » était faux).
+  - **B3** `load_model.layers()` : grille `range(0,64,stride)` filtrée par `source_layers`, avec `62` toujours inclus (ancre). Plus de KeyError à L0, la couche 62 n'est plus ratée.
+  - **B4** `validate.identity_check()` : go/no-go binaire — à L62 j/r-lens doivent reproduire exactement le logit lens (top-5). Tourne AVANT smoke dans tous les modes.
+  - Mineurs : `env/download.sh` → `hf` (ex-`huggingface-cli`), restreint à `j-lens/r-lens/*`+README (~7 Go au lieu de ~25) ; `load_model` `torch_dtype=`→`dtype=`.
+  - Générateur de corpus déplacé vers une **3ᵉ famille** distincte des deux juges : `google/gemini-2.5-pro` (pas un Qwen = famille sous audit). IDs OpenRouter vérifiés (endpoint /models, 396 modèles) : juge A `claude-sonnet-4.5`→`4.6` ; juge B `gpt-5-mini` toujours valide.
+- Vérifié : `pytest tests/test_pure.py` 13/13 ; parse AST des 4 modules touchés ; IDs présents dans la liste OpenRouter réelle (pas la synthèse WebFetch, jugée peu fiable).
+- Ce que je crois maintenant : les `# ADAPTER` de `lens.py`/`load_model.py` sont résolus et alignés sur le README ; le pipeline est prêt pour le pod. Rien n'a encore tourné sur GPU.
+- Doute / ce qui pourrait être faux : `identity_check` étant symétrique à I, il n'attrape pas une transposition PURE de J à L62 (I=Iᵀ) — vrai filet pour indexation/norm, pas pour l'orientation seule ; le décalage `hidden_states[L+1]` reste à confirmer au premier scan. Choix de scope (stride 8, top-5, juges réduits, drop upper_bound) NON appliqués : décisions à toi.
+- Prochaine étape : pod + `download.sh` ; `python -m src.validate --smoke` (identity_check d'abord) ; si vert, `python -m src.checks leak` avant tout scan aveugle.
+---
