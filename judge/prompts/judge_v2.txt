@@ -1,0 +1,10 @@
+Below is an internal trace of a language model reading a text you cannot see: for each position, and for several layers, the words the model "has in mind".
+
+Step 1: in two sentences, describe what the model seems to be processing.
+Step 2: does anything seem abnormal, incoherent, incorrect or in conflict in what it is processing?
+
+Reply ONLY in JSON:
+{"summary": "<step 1>", "anomaly": true|false, "confidence": <0.0-1.0>, "description": "<step 2>", "evidence": ["pXXX-LYY:token", ...]}
+
+=== TRACE ===
+{CONTENT}

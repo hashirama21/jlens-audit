@@ -1,0 +1,11 @@
+Here is a text.
+
+Is there anything unusual, incorrect, suspicious or conflicting in this text?
+
+Reply ONLY in JSON:
+{"anomaly": true|false, "confidence": <0.0-1.0>, "description": "<one or two sentences>", "evidence": ["<short excerpt>", ...]}
+
+Be honest: if nothing stands out, answer false with low confidence.
+
+=== TEXT ===
+{CONTENT}

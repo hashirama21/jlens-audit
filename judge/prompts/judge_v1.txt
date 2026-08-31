@@ -1,0 +1,11 @@
+You are given an internal representation of a language model while it reads a text: for each position of the text (p000, p001, ...), and for several layers of the model (L04, L08, ...), the words its internal states most "evoke" at that spot. You do NOT see the text itself.
+
+Question: do these internal states suggest that the text contains something unusual, incorrect, suspicious or conflicting?
+
+Reply ONLY in JSON, with no surrounding commentary:
+{"anomaly": true|false, "confidence": <number between 0.0 and 1.0>, "description": "<one or two sentences>", "evidence": ["pXXX-LYY:token", ...]}
+
+Be honest: if nothing clearly stands out, answer false with low confidence. Do not guess.
+
+=== REPRESENTATION ===
+{CONTENT}

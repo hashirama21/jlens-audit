@@ -1,0 +1,27 @@
+[project]
+name = "jlens-audit"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "torch>=2.3",
+    "transformers>=4.45",
+    "accelerate",
+    "safetensors",
+    "huggingface_hub",
+    "nnsight",
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "scipy",
+    "matplotlib",
+    "seaborn",
+    "openai>=1.30",
+    "tqdm",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

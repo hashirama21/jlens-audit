@@ -1,0 +1,13 @@
+lenses/*
+!lenses/.gitkeep
+scans/*.json
+judge/outputs/_cache/
+*.pyc
+__pycache__/
+.env
+notebooks/.ipynb_checkpoints/
+.venv/
+.idea/
+.pytest_cache/
+.DS_Store
+**/.DS_Store

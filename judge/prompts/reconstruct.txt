@@ -1,0 +1,6 @@
+Below is an internal representation of a language model while it reads a text: for each position, and for several layers, the words its internal states evoke. You do not see the text.
+
+Reconstruct the text the model was reading, as faithfully as possible, position by position. Reply ONLY with the reconstructed text, with no commentary.
+
+=== REPRESENTATION ===
+{CONTENT}

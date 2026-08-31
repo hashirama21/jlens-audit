@@ -1,0 +1,15 @@
+torch>=2.3
+transformers>=4.45
+accelerate
+safetensors
+huggingface_hub
+nnsight
+jupyterlab
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+openai>=1.30
+tqdm
+python-dotenv
