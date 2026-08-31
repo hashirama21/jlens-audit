@@ -1,5 +1,5 @@
 """Step 3 — quantitative validation that the lenses work.
-   identity_check : the real go/no-go — runs first in every mode (binary, free, decisive).
+   identity_check + orientation_check : the two-part go/no-go — run first in every mode.
    --smoke : soft conformity test 'sushi -> Japan' (R-lens post: R from ~L2, J around ~L14 — order of magnitude).
    otherwise: pass@10 per layer on data/multihop.jsonl (generate via the agent, filtered: the model answers correctly)."""
 import json
@@ -13,16 +13,31 @@ from .lens import load_all
 
 
 def identity_check(lenses, target=TARGET_LAYER, k=5):
-    """Go/no-go: at the anchor layer the J/R Jacobian row is exactly I, so both lenses
-    must reproduce the logit lens exactly. Catches norm folding and, above all, the
-    source_layers indexing / hidden_states[L+1] convention in one shot. Compare top-5
-    (not top-10): bf16 noise can reorder near-ties in the tail."""
+    """Go/no-go part 1: at the anchor layer the Jacobian row is exactly I, so both lenses
+    must reproduce the logit lens exactly. Catches norm folding and source_layers indexing.
+    It CANNOT catch a pure transpose (I == I.T) — that is orientation_check's job. Compare
+    top-5, not top-10: bf16 noise can reorder near-ties in the tail."""
     H, _ = get_resid("The capital of France is", [target])
     ref = lenses["logit"].readout_all(H[target], target, k)
     for kind in ("jlens", "rlens"):
         got = lenses[kind].readout_all(H[target], target, k)
-        assert got == ref, f"{kind} != logit at L{target}: wrong orientation / norm / indexing"
+        assert got == ref, f"{kind} != logit at L{target}: norm folding or source_layers indexing wrong"
     print(f"OK — identity anchor validated at L{target} (top-{k} match)")
+
+
+def orientation_check(lenses, k=10, min_overlap=6):
+    """Go/no-go part 2: J at the layer just below the anchor is close to I, so the J-lens
+    must largely overlap the logit lens there. A transposed matrix (H @ J vs H @ J.T)
+    destroys that overlap — the case identity_check is blind to. Uses the closest loaded
+    sub-anchor layer so it holds under any LAYER_STRIDE."""
+    jlens = lenses["jlens"]
+    near = max(L for L in jlens.maps if L < TARGET_LAYER)
+    H, _ = get_resid("The capital of France is", [near])
+    ref = set(lenses["logit"].readout_all(H[near], near, k)[-1])
+    got = set(jlens.readout_all(H[near], near, k)[-1])
+    ov = len(ref & got)
+    assert ov >= min_overlap, f"overlap {ov}/{k} at L{near}: J-lens orientation likely transposed"
+    print(f"OK — orientation validated at L{near} ({ov}/{k} overlap with logit lens)")
 
 
 def find_pos(text, tok, pivot):
@@ -100,5 +115,6 @@ if __name__ == "__main__":
     ap.add_argument("--smoke", action="store_true")
     a = ap.parse_args()
     lenses = load_all()
-    identity_check(lenses)   # go/no-go, must pass before anything else
+    identity_check(lenses)      # go/no-go, must pass before anything else
+    orientation_check(lenses)
     smoke(lenses) if a.smoke else pass_at_k(lenses)

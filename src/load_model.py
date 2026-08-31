@@ -29,9 +29,14 @@ def load(dtype=torch.bfloat16, device_map="cuda"):
 
 def layers():
     """Scan grid, gated by the lens source_layers (skip_first=4 removes layers 0..3),
-    with TARGET_LAYER always included: it is the identity anchor and the key test."""
-    from .lens import _stack
-    src = set(_stack("jlens")[1])            # source_layers available in the J stack
+    with TARGET_LAYER always included (identity anchor, the key test). Falls back to the
+    naive stride grid when the lens files are not downloaded yet, so the SETUP cell can
+    report a grid before the lenses are loaded."""
+    try:
+        from .lens import _stack
+        src = set(_stack("jlens")[1])
+    except FileNotFoundError:
+        return list(range(0, N_LAYERS, LAYER_STRIDE))
     grid = [L for L in range(0, N_LAYERS, LAYER_STRIDE) if L in src]
     if TARGET_LAYER not in grid and TARGET_LAYER in src:
         grid.append(TARGET_LAYER)

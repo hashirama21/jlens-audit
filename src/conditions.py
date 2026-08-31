@@ -102,6 +102,7 @@ def run(pairs_path="pairs.jsonl", judges=None, prompt_versions=None, instruments
                                    "judge": f"{judge}->{other}", "prompt_v": "text",
                                    "anomaly": False, "confidence": 0.0, "_error": True}
                             fout.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                            fout.flush()
                             continue
                         v = call(other, prompt("text_only", recon))
                         rec = {**base, "condition": "reconstruction", "instrument": inst,
