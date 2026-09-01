@@ -29,7 +29,7 @@ def load(dtype=torch.bfloat16, device_map="cuda"):
 
 
 def layers():
-    """Scan grid, gated by the lens source_layers (skip_first=4 removes layers 0..3),
+    """Scan grid, gated by the layers present in the lens J dict (keys 0..TARGET_LAYER),
     with TARGET_LAYER always included (identity anchor, the key test). Falls back to the
     naive stride grid when the lens files are not downloaded yet, so the SETUP cell can
     report a grid before the lenses are loaded."""

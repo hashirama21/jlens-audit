@@ -22,7 +22,8 @@ INSTRUMENTS = ["jlens", "rlens", "logit"]
 N_LAYERS = 64             # transformer blocks (hidden_states has N_LAYERS + 1 entries).
 D_MODEL = 5120            # residual width; matches the lens J stack (d_model in lens.pt).
 TARGET_LAYER = 62         # lens anchor row = identity here (n_layers - 2); J_62 == I -> degenerates to logit lens.
-SKIP_FIRST = 4            # layers 0..3 are absent from source_layers; do not scan below this.
+SKIP_FIRST = 0            # J covers layers 0..62; skip_first=4 in provenance is a fitting
+                          # parameter, NOT a row exclusion. Verified in lens.pt (63 keys, 0..62).
 
 USE_CHAT_TEMPLATE = True     # feed texts through the chat template (deployment framing).
 ADD_GENERATION_PROMPT = False # scan/span read the content; no trailing assistant prompt.

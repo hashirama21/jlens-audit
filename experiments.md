@@ -78,3 +78,15 @@ Format per entry:
 - Doubt / what could be wrong: the real Qwen tokenizer prefix (expected 3 tokens: `<|im_start|>user\n`) and the `enable_thinking=False` render are only checkable on the pod — the harness validates logic, not Qwen's exact tokenization.
 - Next step: pod → B0 prefix check (`prefix_len == 3`) → go/no-go → scan.
 ---
+## 2026-09-01 (3) — Real lens.pt format corrected (human inspection)  [counted: NO — hardening]
+- Done (from direct inspection of lens.pt, overrides the README summary):
+  - **J is a dict `{layer_number: (d,d) Jacobian}` in float16**, keyed 0..62 (63 layers) — NOT a stack. `_stack` drops the `enumerate(source_layers)` indirection (and any off-by-one): tuple is now `(J, J, d)` (second J kept so `layers()` iterates its keys). `_load_layer_map` returns `J[L].to(torch.bfloat16)` (fp16 on disk → bf16 for the matmul against the bf16 residual).
+  - **`SKIP_FIRST = 0`**: source_layers covers 0..62; `skip_first=4` in provenance is a fitting parameter, not a row exclusion. Early layers (where R-lens is meant to beat J-lens) are therefore available.
+  - **Checkpoint confirmed**: provenance `model_id = Qwen/Qwen3.6-27B` (standard estimator, pretrain corpus, 25 prompts, t_max=128) — closes the blind spot neither identity_check nor orientation_check covered.
+  - Added `python -m src.lens` (`inspect`) that prints keys/dtype/provenance and checks `J[62] == I` offline — reproducible form of the human's two verification snippets; also verify R-lens provenance mentions RelP, not "standard".
+  - `Lens.__init__` simplified to `.to(device)` (bf16 now owned by `_load_layer_map`).
+- Verified: AST parse; `pytest tests/test_pure.py` 13/13; import sweep 14/14 with a fake J-dict (keys 0..62) → `layers()` grid = [0,4,..,60,62], includes layer 0; framing harness 15/15. NOT run here (no torch/lens files): `python -m src.lens` and the anchor check — pod-side.
+- What I believe now: lens indexing is now correct against the real artifact; the identity anchor is checkable offline before any GPU load.
+- Doubt / what could be wrong: `LAYER_STRIDE=4` left as-is (stride is your scope call); the anchor `J[62]==I` and R-lens RelP provenance still to confirm on the pod via `python -m src.lens`.
+- Next step: pod → `python -m src.lens` (keys 0..62, dtype fp16, anchor==I, R-lens=RelP) → go/no-go → scan.
+---
