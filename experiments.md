@@ -146,3 +146,12 @@ Format per entry:
 - Verified offline: AST, import, _TELLS behavior (self-label→skip, injection Note→keep, tell-in-both→keep), pytest 13/13.
 - Next: pod → regenerate with max_tokens=4000 + hardened template; read the first two `bug` pairs by hand before letting the other families run.
 ---
+## 2026-09-01 (9) — gen_pairs: patch format for substitution families  [counted: NO — corpus quality]
+- Template hardening worked (no more self-annotation; first bug pair was a clean inverted-condition). But outputs still truncated in the `clean` field: the generator wrote `anomalous` in full then repeated near-identical code in `clean` — paying twice for a one-line diff, doubling the output past any reasonable limit.
+- Fix: change what we ask, not the ceiling. For substitution families (`_PATCH_FAMILIES = {bug, false_premise}`) the model returns the correct text ONCE + a one-line/one-span patch (`clean`, `anomalous_line_old`, `anomalous_line_new`); `generate` rebuilds `anomalous = clean.replace(old, new)` after checking `clean.count(old) == 1` (skip otherwise). Benefits: ~half the output, "exactly one line differs" true by construction, and exact `anomaly_text = old -> new` for free. injection/conflict keep both full versions (diff is an addition/rephrasing, not a substitution).
+- bug template also now steers away from "expert" anomalies (inclusive-vs-exclusive quartiles etc.) toward obvious-once-seen logic errors — those subtle ones would drop the bug family under 50% on the capability test.
+- `_dump_raw` helper factored out (raw output on any failure). `import re` present.
+- Watch at review (noted): the IQR example used inclusive vs exclusive (docstring said exclusive) — too subtle; the new template forbids that class.
+- Verified offline: AST; end-to-end generate() with a stubbed generator (patch rebuild exact for bug + false_premise, full versions kept for injection/conflict, uniqueness skip works); pytest 13/13.
+- Next: pod → regenerate; read first two bug pairs + first false_premise pair by hand.
+---
