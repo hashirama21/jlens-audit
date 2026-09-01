@@ -155,3 +155,15 @@ Format per entry:
 - Verified offline: AST; end-to-end generate() with a stubbed generator (patch rebuild exact for bug + false_premise, full versions kept for injection/conflict, uniqueness skip works); pytest 13/13.
 - Next: pod → regenerate; read first two bug pairs + first false_premise pair by hand.
 ---
+## 2026-09-01 (10) — judge.complete: surface API errors + stop caching empties  [counted: NO — infra]
+- Two bugs in judge.complete:
+  - **Silent API errors**: exceptions were caught into `last`, retried, and never printed during the loop. Added a per-attempt trace `[api] {model} attempt i/N: {type}: {msg}`. (The final return already surfaces `last` in `description`.)
+  - **Cache poisoning (the real trap)**: with `want_json=False`, an empty response `raw=""` was cached as a success (`json.dump("")`), so every later call with the same prompt re-read `""` from disk without touching the API — re-running generate stayed empty forever. Fix: `if raw.strip():` before caching; empty is returned but never cached. (want_json=True was already safe: `_parse_json("")` → None → error dict, uncached.)
+- Pod action required (polluted entries already on disk): purge sub-10-byte cache files —
+  `find "$(python -c 'from src.judge import CACHE; print(CACHE)')" -name "*.json" -size -10c -print -delete`
+  then the 30-second direct probe: `complete(GENERATOR_MODEL, 'Reply only: {"ok": true}', temperature=0, want_json=False, max_tokens=100)` — with the trace, any API error is now visible.
+- Verified offline: stubbed client — empty (want_json F and T) caches 0 files, non-empty/valid-json caches 1; pytest 13/13.
+- Note: reconstruction (condition 7) uses want_json=False, so it was exposed to the same cache trap — now fixed there too.
+- **Root cause revealed by the probe**: the direct call returned `API error: 'OPENROUTER_API_KEY'` → the key simply isn't exported on the pod (`client()` did `os.environ["OPENROUTER_API_KEY"]` → KeyError, swallowed as a retryable API error). Fix on the pod: `export OPENROUTER_API_KEY=...`.
+- Hardened `client()`: explicit key check → clear `RuntimeError("OPENROUTER_API_KEY is not set — export it ...")`. Hoisted `client()` out of the retry loop (after the cache check) so a missing key fails fast instead of being retried 3× and buried; cache hits still work without a key. Verified offline: missing key → RuntimeError, cache hit → returns without touching client, empties still uncached.
+---

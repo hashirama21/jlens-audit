@@ -19,8 +19,12 @@ _client = None
 def client():
     global _client
     if _client is None:
+        key = os.environ.get("OPENROUTER_API_KEY")
+        if not key:
+            raise RuntimeError("OPENROUTER_API_KEY is not set — `export OPENROUTER_API_KEY=...` "
+                               "before running generation or judge calls.")
         from openai import OpenAI
-        _client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=os.environ["OPENROUTER_API_KEY"])
+        _client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=key)
     return _client
 
 
@@ -59,20 +63,23 @@ def complete(model: str, text: str, *, temperature: float, want_json: bool = Tru
     if cache_file.exists():
         return json.load(open(cache_file))
 
+    cli = client()   # fail fast on a missing key (config error) rather than retry it 3x
     last = None
     for attempt in range(retries):
         try:
-            r = client().chat.completions.create(
+            r = cli.chat.completions.create(
                 model=model, temperature=temperature, max_tokens=max_tokens,
                 messages=[{"role": "user", "content": text}])
             raw = r.choices[0].message.content or ""
         except Exception as e:  # network / API error -> retry with backoff
             last = e
+            print(f"[api] {model} attempt {attempt + 1}/{retries}: {type(e).__name__}: {e}")
             time.sleep(2 ** attempt)
             continue
 
         if not want_json:
-            json.dump(raw, open(cache_file, "w"))
+            if raw.strip():                       # never cache an empty response as a success
+                json.dump(raw, open(cache_file, "w"))
             return raw
         parsed = _parse_json(raw)
         if parsed is None:  # deterministic at temp 0 -> do not retry, surface as error (uncached)
