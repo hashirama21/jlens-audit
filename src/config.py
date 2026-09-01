@@ -24,7 +24,9 @@ D_MODEL = 5120            # residual width; matches the lens J stack (d_model in
 TARGET_LAYER = 62         # lens anchor row = identity here (n_layers - 2); J_62 == I -> degenerates to logit lens.
 SKIP_FIRST = 4            # layers 0..3 are absent from source_layers; do not scan below this.
 
-USE_CHAT_TEMPLATE = True
+USE_CHAT_TEMPLATE = True     # feed texts through the chat template (deployment framing).
+ADD_GENERATION_PROMPT = False # scan/span read the content; no trailing assistant prompt.
+ENABLE_THINKING = False       # Qwen3 template: no <think> block (would break capability YES/NO parsing).
 
 # --- Scan ---
 LAYER_STRIDE = 4          # scan 1 layer out of LAYER_STRIDE over the 64 blocks (source_layers gate the grid).

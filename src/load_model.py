@@ -5,7 +5,8 @@ the scripts (which reload — acceptable for background runs).
 tests can run on a laptop."""
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from .config import MODEL_DIR, LAYER_STRIDE, N_LAYERS, TARGET_LAYER, SKIP_FIRST, USE_CHAT_TEMPLATE
+from .config import (MODEL_DIR, LAYER_STRIDE, N_LAYERS, TARGET_LAYER, SKIP_FIRST,
+                     USE_CHAT_TEMPLATE, ADD_GENERATION_PROMPT, ENABLE_THINKING)
 
 _state = {}
 
@@ -50,22 +51,26 @@ def unembed_parts():
     return model.lm_head.weight, model.model.norm
 
 
-def render_input(tok, content, *, add_generation_prompt=False):
+def render_input(tok, content, *, add_generation_prompt=ADD_GENERATION_PROMPT):
     """The exact string fed to the model: chat-templated (special tokens included) or raw.
-    Single source of truth for the input framing (USE_CHAT_TEMPLATE)."""
+    Single source of truth for the input framing (USE_CHAT_TEMPLATE). We render to a STRING
+    here (never return_tensors on apply_chat_template — it yields a BatchEncoding, not a
+    tensor, across transformers versions); callers tokenize the string via to_input_ids."""
     if USE_CHAT_TEMPLATE:
-        return tok.apply_chat_template([{"role": "user", "content": content}],
-                                       add_generation_prompt=add_generation_prompt, tokenize=False)
+        return tok.apply_chat_template([{"role": "user", "content": content}], tokenize=False,
+                                       add_generation_prompt=add_generation_prompt,
+                                       enable_thinking=ENABLE_THINKING)
     return content
 
 
 def _add_special():
     # Under the template the rendered string already carries the special tokens, so we must
-    # not add them again (matches apply_chat_template(tokenize=True)); raw mode keeps the default.
+    # not add them again (matches apply_chat_template(tokenize=True), and avoids a stray BOS
+    # that would shift every position by one relative to the spans); raw mode keeps the default.
     return not USE_CHAT_TEMPLATE
 
 
-def to_input_ids(tok, content, *, add_generation_prompt=False):
+def to_input_ids(tok, content, *, add_generation_prompt=ADD_GENERATION_PROMPT):
     """Input ids (1, seq) for `content`, so scan, capability probe and span share one framing."""
     rendered = render_input(tok, content, add_generation_prompt=add_generation_prompt)
     return tok(rendered, return_tensors="pt", add_special_tokens=_add_special())["input_ids"]

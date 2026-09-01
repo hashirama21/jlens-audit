@@ -68,3 +68,13 @@ Format per entry:
 - Doubt / what could be wrong: `content_span` assumes `content` appears verbatim in the render (fallback = full range otherwise); `orientation_check` keeps an arbitrary threshold to calibrate.
 - Next step: pod → go/no-go → manually verify `find_pos`/`content_span` on one pair before the full scan.
 ---
+## 2026-09-01 (2) — enable_thinking + BatchEncoding robustness  [counted: NO — hardening]
+- Done:
+  - Confirmed the `apply_chat_template(return_tensors=...)[0]` → `Encoding` crash is NOT in the repo: `to_input_ids` already renders to a string then does `tok(...)["input_ids"]` (since commit e1b0621). Documented this in `render_input`/`_add_special` so it can't regress.
+  - Added `config.ADD_GENERATION_PROMPT` (False) and `config.ENABLE_THINKING` (False); `render_input` now passes `enable_thinking=ENABLE_THINKING` to `apply_chat_template`. This prevents Qwen3 from emitting a `<think>` block for `capability.ask` (add_generation_prompt=True), which would have broken the YES/NO first-token parse.
+  - `render_input`/`to_input_ids` defaults now come from `ADD_GENERATION_PROMPT` so the scan path (get_resid + content_span) stays aligned regardless of the flag; `capability.ask` overrides to True explicitly.
+- Verified: framing harness 15/15 (fake tokenizer accepts the new `enable_thinking` kwarg); `pytest tests/test_pure.py` 13/13; import sweep 14/14 with constants wired.
+- What I believe now: input framing is robust across transformers versions and Qwen3 thinking mode; positions still aligned end to end.
+- Doubt / what could be wrong: the real Qwen tokenizer prefix (expected 3 tokens: `<|im_start|>user\n`) and the `enable_thinking=False` render are only checkable on the pod — the harness validates logic, not Qwen's exact tokenization.
+- Next step: pod → B0 prefix check (`prefix_len == 3`) → go/no-go → scan.
+---
