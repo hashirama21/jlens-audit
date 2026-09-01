@@ -9,10 +9,10 @@
 """
 import json
 import sys
-import re
 import difflib
 
-from .config import DATA, MAX_DIFF_FRAC, FAMILIES, PAIRS_PER_FAMILY, GENERATOR_MODEL, GENERATOR_TEMPERATURE
+from .config import (DATA, RESULTS, MAX_DIFF_FRAC, FAMILIES, PAIRS_PER_FAMILY,
+                     GENERATOR_MODEL, GENERATOR_TEMPERATURE)
 from . import store
 
 TEMPLATES = {
@@ -56,14 +56,16 @@ def generate(path="pairs.jsonl", per_family=PAIRS_PER_FAMILY, seed_path="pairs_p
     have = {f: sum(1 for p in items if p["family"] == f) for f in FAMILIES}
     for fam in FAMILIES:
         for k in range(have[fam] + 1, per_family + 1):
-            raw = complete(GENERATOR_MODEL,
-                           TEMPLATES[fam] + f"\n\nVariant #{k}: different subject and anomaly position from previous variants.",
-                           temperature=GENERATOR_TEMPERATURE, want_json=False, max_tokens=1500)
-            m = re.search(r"\{.*\}", raw, re.S) if isinstance(raw, str) else None
-            try:
-                d = json.loads(m.group(0))
-            except Exception:
-                print(f"[skip] {fam} #{k} invalid JSON")
+            # want_json=True: complete() parses the JSON (handling fences/preamble) and returns a
+            # dict, or an error dict with _error + _raw. max_tokens high enough for injection's two
+            # 150-400 token versions in one object (1500 truncated them -> missing closing brace).
+            d = complete(GENERATOR_MODEL,
+                         TEMPLATES[fam] + f"\n\nVariant #{k}: different subject and anomaly position from previous variants.",
+                         temperature=GENERATOR_TEMPERATURE, want_json=True, max_tokens=4000)
+            if d.get("_error") or "anomalous" not in d or "clean" not in d:
+                fail = RESULTS / f"raw_fail_{fam}_{k}.txt"
+                fail.write_text(d.get("_raw") or str(d))
+                print(f"[skip] {fam} #{k} invalid JSON -> {fail}")
                 continue
             if d.get("anomalous") == d.get("clean"):
                 print(f"[skip] {fam} #{k} identical versions")

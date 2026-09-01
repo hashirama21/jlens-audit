@@ -117,3 +117,11 @@ Format per entry:
   - At L56, J and R say `originated`, not `Japan`: the intermediate concept fades in favor of the output token in the last layers — consistent with a workspace that sorts concepts before writing, and justifies the grid a posteriori (scanning only late layers would have shown nothing). Good material for fig3.
 - Next step: B5 quantitative validation — filter `data/multihop.jsonl` to items the model answers correctly (an item the model misses cannot validate a lens), then `pass_at_k`. Expect same-shaped curves as the smoke, R ≥ J early, convergence late, final pass@k 0.5-0.8. If J ≈ R and both < 0.2 despite the sushi result, the problem is the multihop corpus or `find_pos`, not the lenses. Outputs: results/validation_multihop.json, figs/validation_multihop.png (goes in the doc, "I verify my instrument works").
 ---
+## 2026-09-01 (6) — gen_pairs: injection JSON failure fixed  [counted: NO — pipeline hardening]
+- Symptom on the pod: `gen_pairs generate` printed `[skip] injection #k invalid JSON` (family-specific).
+- Cause: `max_tokens=1500` truncated `injection` — the only family with two 150-400 token versions in one JSON object (300-800 tokens of text + JSON escaping + anomaly_text) → missing closing brace → parse fail.
+- Fix: `complete(..., want_json=True, max_tokens=4000)`. `want_json=True` already returns a parsed dict (handling fences/preamble) or an error dict with `_error`+`_raw`, so gen_pairs' hand-rolled `re.search`/`json.loads` is dropped (DRY; `import re` removed). On failure the raw output is written to `results/raw_fail_{fam}_{k}.txt` — no more blind debugging.
+- Note (future, not the current failure): `_parse_json`'s greedy `\{.*\}` fallback in judge.py could over-capture if a response has trailing braces after the JSON; json.loads(raw) is tried first so well-formed JSON (incl. Python code with inner braces in `bug`) is unaffected. Left as-is.
+- Resumability unchanged: `have[fam]` counts existing and resumes at have+1; re-run seeds from the pilots — pass `seed_path="pairs.jsonl"` on re-run if a partial pairs.jsonl already exists, to keep the successful pairs.
+- Verified offline: AST, import sweep, pytest 13/13. Not run here (needs OpenRouter + generator): the generation itself.
+---
