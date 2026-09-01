@@ -177,3 +177,10 @@ Format per entry:
 - Verified offline: AST, crash-proof test, pytest 13/13.
 - Next (pod): single test call, report the `[completion] ... finish_reason=...` line — that decides the truncation fix. Pipeline otherwise frozen.
 ---
+## 2026-09-01 (12) — truncation root cause: gemini reasoning eats the token budget  [counted: NO — infra]
+- Probe: `finish_reason=length chars=69 max_tokens=600` → gemini-2.5-pro is a reasoning model; reasoning tokens consume max_tokens, leaving ~69 chars of visible JSON before the cap. Confirmed truncation, not malformation.
+- Fixed a real latent bug the review flagged: `_key(model, temperature, want_json, text)` omitted `max_tokens`, so a cached result at one budget would be served for another. Now `_key(model, temperature, want_json, max_tokens, text)` (verified: different max_tokens → different key). NB: this invalidates old cache entries (orphaned, harmless).
+- Parse-failure description now carries `finish_reason` — `JSON parse failed (finish_reason=length|stop)` distinguishes truncation from a model stopping mid-code.
+- generate() max_tokens LEFT at 4000 (pipeline frozen pending the 1200 direct test). CAUTION for the tuning step: the proposed `1200 if bug else 600` would re-truncate injection/conflict — those keep TWO full versions (~500 tokens) + gemini reasoning, so they need MORE than 600, not less; only bug/false_premise are compact patch formats. Generation tokens are cheap, so err high per family.
+- Verified offline: AST, cache-key test, pytest 13/13.
+---

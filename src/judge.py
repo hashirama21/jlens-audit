@@ -59,7 +59,7 @@ def complete(model: str, text: str, *, temperature: float, want_json: bool = Tru
     """One completion. Successful results are cached; errors are not (so re-runs retry).
     Network/API failures are retried with backoff; a JSON parse failure at temperature 0 is
     deterministic, so it is NOT retried (that would just burn identical calls)."""
-    cache_file = CACHE / (_key(model, temperature, want_json, text) + ".json")
+    cache_file = CACHE / (_key(model, temperature, want_json, max_tokens, text) + ".json")
     if cache_file.exists():
         return json.load(open(cache_file))
 
@@ -85,8 +85,9 @@ def complete(model: str, text: str, *, temperature: float, want_json: bool = Tru
             return raw
         parsed = _parse_json(raw)
         if parsed is None:  # deterministic at temp 0 -> do not retry, surface as error (uncached)
-            return {"anomaly": False, "confidence": 0.0, "description": "JSON parse failed",
-                    "evidence": [], "_raw": raw, "_error": True}  # full raw so raw_fail_*.txt shows the cut-off
+            return {"anomaly": False, "confidence": 0.0,  # full raw so raw_fail_*.txt shows the cut-off
+                    "description": f"JSON parse failed (finish_reason={r.choices[0].finish_reason})",
+                    "evidence": [], "_raw": raw, "_error": True}
         parsed.setdefault("anomaly", False)
         parsed.setdefault("confidence", 0.0)
         parsed["_raw"] = raw
