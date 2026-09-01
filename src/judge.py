@@ -24,7 +24,7 @@ def client():
             raise RuntimeError("OPENROUTER_API_KEY is not set — `export OPENROUTER_API_KEY=...` "
                                "before running generation or judge calls.")
         from openai import OpenAI
-        _client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=key)
+        _client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=key, timeout=90)
     return _client
 
 
@@ -98,7 +98,7 @@ def complete(model: str, text: str, *, temperature: float, want_json: bool = Tru
             "evidence": [], "_error": True}
 
 
-def call(judge: str, text: str, want_json: bool = True, max_tokens: int = 600) -> dict | str:
+def call(judge: str, text: str, want_json: bool = True, max_tokens: int = 1200) -> dict | str:
     """Judge-facing wrapper: resolves the logical judge name and pins temperature to 0."""
     return complete(JUDGES[judge], text, temperature=JUDGE_TEMPERATURE,
                     want_json=want_json, max_tokens=max_tokens)

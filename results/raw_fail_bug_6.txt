@@ -1,0 +1,3 @@
+```json
+{
+ "clean": "def get_funded_proposals(\n    proposals: list[dict[str, int | str]],\n    min_score: int,\n    available_funds: int\n) -> list[str]:\n    \"\"\"Selects proposals for funding based on score and available budget.\n\n    Proposals are considered in the order they are provided. A proposal is\n    selected if its score meets the minimum requirement and its cost fits\n    within the remaining available funds.\n\n    Args:\n        proposals: A list of dictionaries, each with 'id' (str),\n                   'score' (int), and 'cost' (int).\n        min_score

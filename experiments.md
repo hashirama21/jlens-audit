@@ -191,3 +191,25 @@ Format per entry:
 - Verified offline: GENERATOR_MODEL loads as gemini-2.5-flash, pytest 13/13.
 - Next (pod): pull, purge stale cache if needed, run generate (or the direct Flash test) and check `[completion] finish_reason=stop` with valid JSON.
 ---
+## 2026-09-01 (14) — FIRST real result: blocks E/F/G run on 11 pairs  [counted: YES — ~2.5 h wall, incl. debugging]
+- Done (first end-to-end judge run against the real scans; all numbers below are MINE, pending your independent AUC recompute):
+  - **Block E** (jlens, 2 judges, v1+v2) then **Block F** (rlens+logit, 2 judges, v1 only) over the 11 human-validated pairs (inj_01/02, bug_01/02/03/05, fp_01/02/03/04/06). Both judges kept in F so condition 7 (reconstruction) still pairs cross-judge. Then **Block G** = `python -m src.metrics` → results/metrics.csv, triplet.csv, inter_judge.json, figs/fig1_triplet.png, fig2_auc_family.png. fig3_example NOT yet made.
+  - **Two judge bugs fixed mid-run (your approval via prompts):** (a) judgeB `gpt-5-mini` returned `finish_reason=length`, empty JSON on ~every call — a reasoning model burning the 600-token budget before emitting JSON (same class as entries 12/13 on the generator). Switched `JUDGE_B` → `openai/gpt-4.1-mini` via .env (non-reasoning, still OpenAI = 3rd-family design intact, no code change). (b) `judge.py`: OpenAI client had NO timeout → one stalled call hung the whole run (froze fp_01 at key 12/64); and `call()` default `max_tokens=600` was too low for judgeA (claude rambles a preamble past the cap on verbose logit/degenerate inputs → finish=length). Fixed: `OpenAI(..., timeout=90)` and `call(max_tokens=1200)`.
+  - Windows-local run: forced `PYTHONUTF8=1` (scans are UTF-8, Windows default cp1252 crashed every `read_text`); no code change.
+- Verified:
+  - **Leak gate GREEN** (CLAUDE.md, shown before any scan run): `results/leak_check.csv`, 66 scans, `shared_ngrams=0` everywhere, `frac=0.0`; `max_contig=2` except bug_05/rlens=3 (below the n=4 threshold → signal, not harness leak).
+  - **579/592 valid verdicts (2.2 % loss).** Scan conditions (2/3/4/5) essentially complete: only 1 scan key lost (bug_03 permuted jlens judgeB). Coverage 64/64 on the 4 full-matrix items, 46-48 on the 7 E/F items.
+  - **Budget:** finished at **$14.97 / $19** (E=$2.83, F=$3.44). Real per-item ≈ $1.07 full-matrix, measured on fp_01 with a clean before/after usage snapshot from openrouter /credits.
+- What I believe now (FACTUAL, not a conclusion — you recompute + decide): triplet (Δ pooled judges/prompts, 95 % paired-bootstrap CI):
+  - **Δ3 permuted−chance > 0, CI excludes 0 on all three instruments** (jlens +0.28 [0.02,0.46], rlens +0.20 [0.01,0.39], logit +0.29 [0.11,0.45]) → apophenia (H3) present: shuffled scans still score above chance.
+  - **Δ1 scan−prompt < 0 everywhere** (jlens −0.21, rlens −0.16 [CI<0], logit −0.12) → the blind scan never beats reading the text (prompt-only AUC 0.95/0.96).
+  - **Δ2 scan−reconstruction > 0 for rlens (+0.49 [0.23,0.79]) and logit (+0.32 [0.05,0.57])**, jlens inconclusive (+0.11 [−0.30,0.47]).
+  - Inter-judge (scan v1): κ=0.49, Spearman=0.50 (moderate).
+- Doubt / what could be wrong:
+  - **Δ2 is fragile/biased**: the reconstruction condition lost ~10 keys to `finish_reason=content_filter` (claude refusing to read reconstructed text), **concentrated on the false_premise family** (fp_02/03/04/06 clean AND anomalous); reconstruction also has a huge false-alarm-on-clean rate (0.5-0.9). Δ2 uses reconstruction → computed on fewer, non-random items. Not recoverable without a design change (deterministic safety refusals). The 2 non-filter losses are gpt-4.1-mini reconstruction degenerating into repetition (bug_01/rlens).
+  - n=11 pairs → per-family AUCs (fig2, n_boot=300 on ~4 items) are **exploratory only**, as planned; report the pooled AUC as the headline, not the family cells.
+  - **Judge-identity change** (judgeB gpt-5-mini → gpt-4.1-mini) alters results vs the frozen plan (entry 7) and MUST be declared in limits; κ is preserved (still 2 judges) but the OpenAI judge is now non-reasoning.
+  - Mixed max_tokens across items (4 cached items scored at 600, 7 new at 1200) — the resumability key ignores max_tokens so valid 600 verdicts were kept; anomaly/confidence are unaffected by the cap, only truncation is, so pooling is fine — but note it.
+  - All AUCs here are MY computation; per CLAUDE.md you recompute independently before anything is reported.
+- Next step: you read 3 raw examples per condition + independently recompute the pooled AUCs; make fig3_example (annotated anomalous scan); decide the pivot (H1/H2/H3) and whether the content_filter loss forces a reconstruction-channel rethink; then the exec summary.
+---

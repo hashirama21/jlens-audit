@@ -1,0 +1,1 @@
+{'anomaly': False, 'confidence': 0.0, 'description': 'JSON parse failed', 'evidence': [], '_raw': '', '_error': True}

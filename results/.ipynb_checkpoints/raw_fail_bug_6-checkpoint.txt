@@ -1,0 +1,3 @@
+```json
+{
+ "clean": "def get_longest_streak(data, element):\n    \"\"\"\n    Finds the length of the longest consecutive streak of an element.\n\n    For example, in the string \"abbcccdd\", the longest streak of 'c'\n    is 3.\n\n    Args:\n        data: A string or list to be searched.\n        element: The element to find the streak of.\n\n    Returns:\n        The integer length of the longest streak, or 0 if not found.\n    \"\"\"\n    max_streak = 0\n    current_streak = 0\n    for item in data:\n        if item == element:\n

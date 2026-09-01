@@ -1,0 +1,3 @@
+```json
+{
+  "clean": "from typing import List\n\ndef longest_positive_streak(numbers: List[float]) -> int:\n    \"\"\"Calculates the length of the longest consecutive streak of positive numbers.\n\n    A number is considered positive if it is strictly greater than zero.\n    The list can contain positive numbers, negative numbers, and zeros.\n    An empty list results in a streak of 0.\n\n    Args:\n        numbers: A list of floats or integers.\n\n    Returns:\n        The length of the longest streak of positive numbers found.\n    \"\"\"\n    max_len = 0\n    current_len = 0\n    for num

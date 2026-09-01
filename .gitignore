@@ -11,3 +11,14 @@ notebooks/.ipynb_checkpoints/
 .pytest_cache/
 .DS_Store
 **/.DS_Store
+
+# secrets / SSH keys — NEVER commit
+vast_key
+vast_key.pub
+vast.ai
+vast.ai.pub
+
+# editor / scratch
+docs/a.txt
+a.txt
+

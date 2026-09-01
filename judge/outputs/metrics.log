@@ -1,0 +1,45 @@
+          condition instrument           judge prompt_v       auc     ci_lo     ci_hi  tpr_at_5fpr  false_alarm_clean
+0       prompt_only        NaN          judgeA     text  0.950413  0.838843  1.000000     0.363636           0.454545
+4       prompt_only        NaN          judgeB     text  0.962810  0.876033  1.000000     0.181818           0.090909
+8    reconstruction      jlens  judgeA->judgeB     text  0.623967  0.458678  0.814050     0.000000           0.545455
+12   reconstruction      jlens  judgeB->judgeA     text  0.469388  0.255102  0.663265     0.285714           0.571429
+16   reconstruction      logit  judgeA->judgeB     text  0.663636  0.541322  0.782917     0.000000           0.900000
+20   reconstruction      logit  judgeB->judgeA     text  0.454545  0.301653  0.632231     0.000000           0.636364
+24   reconstruction      rlens  judgeA->judgeB     text  0.433884  0.276860  0.578512     0.000000           0.909091
+28   reconstruction      rlens  judgeB->judgeA     text  0.329545  0.102273  0.518182     0.090909           0.875000
+32             scan      jlens          judgeA       v1  0.706612  0.470971  0.917562     0.181818           0.363636
+36             scan      jlens          judgeA       v2  0.661157  0.499897  0.826550     0.090909           0.272727
+40             scan      jlens          judgeB       v1  0.640496  0.537087  0.797521     0.000000           0.454545
+44             scan      jlens          judgeB       v2  0.570248  0.417355  0.710744     0.000000           0.545455
+48             scan      logit          judgeA       v1  0.805785  0.689979  0.925620     0.363636           0.272727
+52             scan      logit          judgeA       v2  0.812500  0.750000  1.000000     0.500000           0.500000
+56             scan      logit          judgeB       v1  0.818182  0.570248  1.000000     0.727273           0.000000
+60             scan      logit          judgeB       v2  0.500000  0.125000  0.875000     0.000000           0.000000
+64             scan      rlens          judgeA       v1  0.690083  0.528926  0.855372     0.181818           0.545455
+68             scan      rlens          judgeA       v2  0.687500  0.343750  1.000000     0.250000           0.500000
+72             scan      rlens          judgeB       v1  0.714876  0.595041  0.855682     0.000000           0.545455
+76             scan      rlens          judgeB       v2  0.625000  0.500000  0.875000     0.000000           0.250000
+80    scan_permuted      jlens          judgeA       v1  0.789256  0.628099  0.925620     0.272727           0.272727
+84    scan_permuted      jlens          judgeA       v2  0.652893  0.512397  0.801653     0.181818           0.363636
+88    scan_permuted      jlens          judgeB       v1  0.747934  0.627996  0.900826     0.000000           0.363636
+92    scan_permuted      jlens          judgeB       v2  0.545455  0.272727  0.838447     0.000000           0.500000
+96    scan_permuted      logit          judgeA       v1  0.818182  0.628099  0.950413     0.090909           0.272727
+100   scan_permuted      logit          judgeA       v2  0.625000  0.500000  0.875000     0.250000           0.750000
+104   scan_permuted      logit          judgeB       v1  0.582645  0.433884  0.747934     0.000000           0.363636
+108   scan_permuted      logit          judgeB       v2  0.750000  0.500000  1.000000     0.000000           0.000000
+112   scan_permuted      rlens          judgeA       v1  0.768595  0.557851  0.933884     0.000000           0.454545
+116   scan_permuted      rlens          judgeA       v2  0.687500  0.500000  1.000000     0.500000           0.750000
+120   scan_permuted      rlens          judgeB       v1  0.595041  0.500000  0.727273     0.000000           0.727273
+124   scan_permuted      rlens          judgeB       v2  0.437500  0.218750  0.500000     0.000000           0.500000
+
+   instrument                   delta       val        lo        hi
+0      jlens          Δ1 scan−prompt -0.214876 -0.466942  0.012397
+1      jlens  Δ2 scan−reconstruction  0.107438 -0.301860  0.471074
+2      jlens      Δ3 permuted−chance  0.280992  0.020661  0.458678
+3      rlens          Δ1 scan−prompt -0.161157 -0.301653 -0.016529
+4      rlens  Δ2 scan−reconstruction  0.491736  0.231405  0.793388
+5      rlens      Δ3 permuted−chance  0.202479  0.012293  0.392665
+6      logit          Δ1 scan−prompt -0.123967 -0.297521  0.049587
+7      logit  Δ2 scan−reconstruction  0.322314  0.049587  0.570248
+8      logit      Δ3 permuted−chance  0.285124  0.111467  0.446384 
+ {'kappa': 0.49279538904899134, 'spearman': np.float64(0.5030077433225453), 'judges': ['judgeA', 'judgeB']}
