@@ -1,0 +1,40 @@
+{"prompt": "The capital of the country where sushi originated is", "pivot": "sushi", "intermediate": "Japan", "answer": "Tokyo"}
+{"prompt": "The currency used in the country whose capital is Ottawa is the", "pivot": "Ottawa", "intermediate": "Canada", "answer": "dollar"}
+{"prompt": "The language most widely spoken in the country where the tango originated is", "pivot": "tango", "intermediate": "Argentina", "answer": "Spanish"}
+{"prompt": "The continent containing the country where the pyramids of Giza stand is", "pivot": "Giza", "intermediate": "Egypt", "answer": "Africa"}
+{"prompt": "The capital of the country where the Eiffel Tower is located is", "pivot": "Eiffel", "intermediate": "France", "answer": "Paris"}
+{"prompt": "The official language of the country whose capital is Lisbon is", "pivot": "Lisbon", "intermediate": "Portugal", "answer": "Portuguese"}
+{"prompt": "The capital of the country where the Colosseum stands is", "pivot": "Colosseum", "intermediate": "Italy", "answer": "Rome"}
+{"prompt": "The currency of the country where Mount Fuji is located is the", "pivot": "Fuji", "intermediate": "Japan", "answer": "yen"}
+{"prompt": "The capital of the country where the Taj Mahal was built is", "pivot": "Taj", "intermediate": "India", "answer": "New Delhi"}
+{"prompt": "The ocean bordering the country whose capital is Canberra to the east is the", "pivot": "Canberra", "intermediate": "Australia", "answer": "Pacific"}
+{"prompt": "The capital of the country where the Kremlin is located is", "pivot": "Kremlin", "intermediate": "Russia", "answer": "Moscow"}
+{"prompt": "The main language spoken in the country where the samba originated is", "pivot": "samba", "intermediate": "Brazil", "answer": "Portuguese"}
+{"prompt": "The capital of the country where the Acropolis stands is", "pivot": "Acropolis", "intermediate": "Greece", "answer": "Athens"}
+{"prompt": "The currency of the country whose capital is Bern is the", "pivot": "Bern", "intermediate": "Switzerland", "answer": "franc"}
+{"prompt": "The continent of the country where Machu Picchu is located is", "pivot": "Machu", "intermediate": "Peru", "answer": "South America"}
+{"prompt": "The capital of the country where the Brandenburg Gate stands is", "pivot": "Brandenburg", "intermediate": "Germany", "answer": "Berlin"}
+{"prompt": "The official language of the country whose capital is Cairo is", "pivot": "Cairo", "intermediate": "Egypt", "answer": "Arabic"}
+{"prompt": "The capital of the country where flamenco originated is", "pivot": "flamenco", "intermediate": "Spain", "answer": "Madrid"}
+{"prompt": "The currency of the country where Big Ben is located is the", "pivot": "Big Ben", "intermediate": "United Kingdom", "answer": "pound"}
+{"prompt": "The capital of the country where the Great Wall stands is", "pivot": "Great Wall", "intermediate": "China", "answer": "Beijing"}
+{"prompt": "The main language spoken in the country whose capital is Vienna is", "pivot": "Vienna", "intermediate": "Austria", "answer": "German"}
+{"prompt": "The capital of the country where Angkor Wat is located is", "pivot": "Angkor", "intermediate": "Cambodia", "answer": "Phnom Penh"}
+{"prompt": "The currency of the country whose capital is Seoul is the", "pivot": "Seoul", "intermediate": "South Korea", "answer": "won"}
+{"prompt": "The capital of the country where the Sydney Opera House stands is", "pivot": "Sydney", "intermediate": "Australia", "answer": "Canberra"}
+{"prompt": "The continent of the country where the Sahara's largest share lies, Algeria, is", "pivot": "Algeria", "intermediate": "Africa", "answer": "Africa"}
+{"prompt": "The capital of the country where Petra is located is", "pivot": "Petra", "intermediate": "Jordan", "answer": "Amman"}
+{"prompt": "The main language spoken in the country whose capital is Mexico City is", "pivot": "Mexico City", "intermediate": "Mexico", "answer": "Spanish"}
+{"prompt": "The capital of the country where the Blue Mosque stands is", "pivot": "Blue Mosque", "intermediate": "Turkey", "answer": "Ankara"}
+{"prompt": "The currency of the country where the Ganges flows into the sea is the", "pivot": "Ganges", "intermediate": "Bangladesh", "answer": "taka"}
+{"prompt": "The capital of the country where Chichen Itza is located is", "pivot": "Chichen", "intermediate": "Mexico", "answer": "Mexico City"}
+{"prompt": "The official language of the country whose capital is Stockholm is", "pivot": "Stockholm", "intermediate": "Sweden", "answer": "Swedish"}
+{"prompt": "The capital of the country where the Christ the Redeemer statue stands is", "pivot": "Redeemer", "intermediate": "Brazil", "answer": "Brasilia"}
+{"prompt": "The currency of the country whose capital is Oslo is the", "pivot": "Oslo", "intermediate": "Norway", "answer": "krone"}
+{"prompt": "The capital of the country where the Hagia Sophia is located is", "pivot": "Hagia", "intermediate": "Turkey", "answer": "Ankara"}
+{"prompt": "The main language spoken in the country whose capital is Amsterdam is", "pivot": "Amsterdam", "intermediate": "Netherlands", "answer": "Dutch"}
+{"prompt": "The capital of the country where the Louvre is located is", "pivot": "Louvre", "intermediate": "France", "answer": "Paris"}
+{"prompt": "The currency of the country where the Kilimanjaro summit lies is the", "pivot": "Kilimanjaro", "intermediate": "Tanzania", "answer": "shilling"}
+{"prompt": "The capital of the country where the Forbidden City stands is", "pivot": "Forbidden", "intermediate": "China", "answer": "Beijing"}
+{"prompt": "The official language of the country whose capital is Warsaw is", "pivot": "Warsaw", "intermediate": "Poland", "answer": "Polish"}
+{"prompt": "The capital of the country where Table Mountain is located is", "pivot": "Table Mountain", "intermediate": "South Africa", "answer": "Pretoria"}
