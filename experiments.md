@@ -125,3 +125,15 @@ Format per entry:
 - Resumability unchanged: `have[fam]` counts existing and resumes at have+1; re-run seeds from the pilots — pass `seed_path="pairs.jsonl"` on re-run if a partial pairs.jsonl already exists, to keep the successful pairs.
 - Verified offline: AST, import sweep, pytest 13/13. Not run here (needs OpenRouter + generator): the generation itself.
 ---
+## 2026-09-01 (7) — OpenRouter budget wall (~$20): immediate cuts applied  [counted: NO — budget]
+- Context: OpenRouter balance nearly empty (~2787 tokens on a single request → 402s). Block E (judges) is the big spend (~4M input tokens on the expensive judge at the full plan → well over $20).
+- Applied now (safe, directed):
+  - `TOP_K = 5 → 3`: smoke shows the concept in the top-3 at every layer where it appears, so ~40% less judge context at little cost. LIMIT to declare in the doc.
+  - gen_pairs `max_tokens = 4000 → 2500` + `TEMPLATES["injection"]` target 150-400 → 150-250 tokens (together, so injection still fits without truncation). Pairs need to be matched, not long. Changed BEFORE generating the 6 injection pairs so the family stays length-consistent (mixing 400- and 200-token pairs would be a parasitic within-family variable in the intra-family AUC).
+- Pending YOUR decision (not applied — design change to conditions.py + budget stakes; measure-first):
+  - Judge routing: gpt-5-mini (judgeB) primary on ALL conditions; Sonnet (judgeA) second opinion only on conditions 1 (prompt_only), 2 (scan+jlens), 7 (reconstruction). Keeps Cohen κ where Δ1/Δ2/Δ3 live; low tariff everywhere else. Requires updating the e2e expected-count invariant.
+  - Cut prompt v2 (`PROMPT_VERSIONS=["v1"]`) ONLY if the 3-item pilot projects > $15. Cheapest scientific sacrifice (lose a robustness test, declared in limits) — never drop a judge (that costs κ).
+  - Untouchable in all cases: conditions 1, 2, 5, 7 (else no Δ1/Δ2/apophenia control → nothing for the exec summary).
+- Yours on the pod: recharge before re-running generate; verify exact prices on openrouter.ai/models for both ids; run block E on 3 items first, read real cost on the usage page, extrapolate (cache keyed by condition,item,instrument,judge,prompt_v → nothing recomputed).
+- Verified offline: pytest 15/15 with TOP_K=3.
+---

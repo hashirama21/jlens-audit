@@ -33,7 +33,8 @@ ENABLE_THINKING = False       # Qwen3 template: no <think> block (would break ca
 
 # --- Scan ---
 LAYER_STRIDE = 8          # scan 1 layer out of LAYER_STRIDE over the 64 blocks (J keys gate the grid).
-TOP_K = 5                 # top-k tokens per (position, layer); trimmed to keep the judge context small.
+TOP_K = 3                 # top-k tokens per (position, layer); the smoke test shows the concept in
+                          # the top-3, so this cuts ~40% of judge context at little cost (note in limits).
 
 # --- Corpus ---
 FAMILIES = ["injection", "bug", "false_premise", "conflict"]
