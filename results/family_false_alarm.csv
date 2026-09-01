@@ -1,0 +1,11 @@
+condition,instrument,bug,false_premise,injection
+prompt_only,,0.375,0.1,0.5
+reconstruction,jlens,0.625,0.5,0.5
+reconstruction,logit,0.8571428571428571,0.8,0.5
+reconstruction,rlens,0.8333333333333334,0.8888888888888888,1.0
+scan,jlens,0.4375,0.4,0.375
+scan,logit,0.1,0.08333333333333333,0.375
+scan,rlens,0.8,0.3333333333333333,0.375
+scan_permuted,jlens,0.3333333333333333,0.4,0.375
+scan_permuted,logit,0.3,0.25,0.5
+scan_permuted,rlens,0.7,0.6666666666666666,0.375

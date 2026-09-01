@@ -24,11 +24,11 @@ VERDICT_KEY = ("id", "version", "condition", "instrument", "judge", "prompt_v")
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
-    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
 def save_jsonl(items: list[dict[str, Any]], path: Path) -> None:
-    with path.open("w") as f:
+    with path.open("w", encoding="utf-8") as f:
         for it in items:
             f.write(json.dumps(it, ensure_ascii=False) + "\n")
 
@@ -48,7 +48,7 @@ def scan_path(id_: str, version: str, instrument: str) -> Path:
 
 
 def load_scan(id_: str, version: str, instrument: str) -> dict[str, Any]:
-    return json.loads(scan_path(id_, version, instrument).read_text())
+    return json.loads(scan_path(id_, version, instrument).read_text(encoding="utf-8"))
 
 
 def verdict_key(record: dict[str, Any]) -> tuple:

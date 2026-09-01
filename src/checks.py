@@ -58,7 +58,7 @@ def sample(n=30, seed=0):
                    f"DESCRIPTION: {r.description}\nEVIDENCE: {r.evidence}\n--- SCAN (first 40 positions) ---\n" +
                    "\n".join(serialize(sc["scan"], TOP_K).split("\n")[:40]) +
                    "\n--- FILL IN BY HAND: evidence present? [ ]  in anomaly zone? [ ]  related to anomaly? [ ]  note:\n")
-    (RESULTS / f"manual_review_{n}.txt").write_text("".join(out))
+    (RESULTS / f"manual_review_{n}.txt").write_text("".join(out), encoding="utf-8")
     print(f"-> results/manual_review_{n}.txt (annotate by hand)")
 
 

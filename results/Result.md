@@ -323,3 +323,64 @@ internal readout)* — driven mostly by logit ≥ J/R and by Δ3's order-invaria
 stays unresolved because the reconstruction control is broken and the permutation control
 doesn't destroy token content. The honest headline is "no clean survival of a lens-specific
 signal once you control for surface vocabulary", at n = 11, pending your recompute.
+
+---
+
+# 15. Block H — sanity checks (run 2026-09-01)
+
+## 15.0 Encoding bug fixed at the root (was §1, kept recurring)
+The cp1252 crash bit a **3rd time** when running `python -m src.checks sample` directly in
+PowerShell (no `PYTHONUTF8`). Fixed permanently: added `encoding="utf-8"` to every text read/write
+in `store.py` (load_jsonl, save_jsonl, load_scan), `judge.py` (prompt), `conditions.py` (verdicts
+read + append), `checks.py` (manual_review write). All three Block H commands then ran with **no**
+`PYTHONUTF8` set — the fix is durable, no env flag needed anymore.
+
+## 15.1 `evidence` — cited evidence vs the actual scan (→ results/evidence_check.csv)
+Over all scan-condition verdicts:
+- **1873** evidence tokens cited; **904 present** in the scan (**48 %**); **121 in the anomaly
+  zone** (~13 % of the present).
+- Reading: **~52 % of cited evidence tokens are not in the scan at all** — the judge fabricates
+  the majority of its stated justification; of what is real, almost none is localized on the
+  anomaly. This is direct, per-token support for H3 (apophenia).
+- **Measurement caveat:** `evidence()` only counts a token "present" if the evidence string
+  matches `pN-LN:token` (regex, checks.py:82). Verdicts whose evidence deviates from that format
+  count toward the denominator but never toward "present", inflating the apparent absent-rate.
+  So 48 % is a **lower bound on fidelity** — treat the magnitude, not the exact %, as the signal.
+
+## 15.2 `family` — false-alarm rate on CLEAN twins (→ results/family_false_alarm.csv)
+Rate of `anomaly=true` on the CLEAN (non-anomalous) item, by condition × family:
+```
+                          bug   false_premise  injection
+prompt_only    (text)     0.38      0.10        0.50
+scan   jlens              0.44      0.40        0.38
+       logit              0.10      0.08        0.38
+       rlens              0.80      0.33        0.38
+reconstruction jlens      0.62      0.50        0.50
+               logit      0.86      0.80        0.50
+               rlens      0.83      0.89        1.00
+scan_permuted  jlens      0.33      0.40        0.38
+               logit      0.30      0.25        0.50
+               rlens      0.70      0.67        0.38
+```
+- False alarms are high across the board: reconstruction 0.5–1.0 (cries wolf constantly),
+  rlens/bug scan 0.80, and injection CLEAN flagged 0.50 even in prompt-only text. High
+  false-alarm-on-clean is the direct H3 measurement the plan asked for.
+
+## 15.3 `sample --n 30 --seed 0` — manual review material (→ results/manual_review_30.txt)
+30 blocks (15 anomalous + 15 clean, scan v1) with description, cited evidence, the first 40 scan
+positions, and a hand-annotation template (evidence present? in anomaly zone? related? note).
+**This is human-read, per CLAUDE.md — not scored by the agent.**
+Two observations from the raw file (for orientation, not conclusions):
+- `fp_02 anomalous logit judgeB conf=0.85`: cited `p035-L40: incorrectly` IS present in the scan
+  (p035 → "/or incorrectly 是错误的"); the judge keys on error/correction tokens (incorrectly,
+  错误, 纠正). A case where evidence is real but its link to the false premise needs your eye.
+- `bug_03 anomalous jlens judgeA conf=0.2 anomaly=False`: a false NEGATIVE — good material for
+  the "10 correct + 10 false positives, for the right reason?" task.
+
+## 15.4 Still YOUR tasks in Block H (not delegated, CLAUDE.md)
+- Read the 30-row `manual_review_30.txt`; fill present / in-zone / related by hand.
+- Independent AUC recompute in a separate cell; confirm it coincides with metrics.py.
+- Pick 10 correct + 10 false positives; judge whether each is for the right reason.
+- Classify false positives on twins into (a) evokes family, (b) evokes own clean content,
+  (c) invents — the proportion of (c) is the direct H3 estimate. §15.1 (fabricated evidence) and
+  §15.2 (clean false-alarm) are the quantitative backbone for this classification.

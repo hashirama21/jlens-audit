@@ -23,7 +23,7 @@ def _load_done() -> set:
     """Keys already present (and not errored) in the verdicts file, for resumability."""
     done = set()
     if store.VERDICTS.exists():
-        for line in store.VERDICTS.read_text().splitlines():
+        for line in store.VERDICTS.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
             try:
@@ -63,7 +63,7 @@ def run(pairs_path="pairs.jsonl", judges=None, prompt_versions=None, instruments
         if not record.get("_error"):
             done.add(key)
 
-    with open(store.VERDICTS, "a") as fout:
+    with open(store.VERDICTS, "a", encoding="utf-8") as fout:
         for p in tqdm(items):
             for version in ("anomalous", "clean"):
                 text = p[version]

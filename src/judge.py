@@ -33,7 +33,7 @@ CACHE.mkdir(exist_ok=True)
 
 
 def prompt(name: str, content: str) -> str:
-    return (JUDGE_PROMPTS / f"{name}.txt").read_text().replace("{CONTENT}", content)
+    return (JUDGE_PROMPTS / f"{name}.txt").read_text(encoding="utf-8").replace("{CONTENT}", content)
 
 
 def _key(*parts) -> str:
