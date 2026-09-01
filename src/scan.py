@@ -6,7 +6,7 @@ import time
 from tqdm import tqdm
 
 from .config import TOP_K
-from .load_model import get_resid, layers, load
+from .load_model import get_resid, layers, load, content_span
 from .lens import load_all
 from . import store
 
@@ -14,12 +14,12 @@ from . import store
 def scan_text(text, lenses):
     H, ids = get_resid(text)
     tok, _ = load()
-    seq = len(ids)
+    lo, hi = content_span(tok, text)                         # skip template scaffolding, keep absolute positions
     out = {kind: {} for kind in lenses}
     for L in layers():
         for kind, lens in lenses.items():
             tops = lens.readout_all(H[L], L, TOP_K)          # (seq) lists
-            for pos in range(seq):
+            for pos in range(lo, hi):
                 out[kind].setdefault(str(pos), {})[str(L)] = tops[pos]
     return out, [tok.decode(int(t)) for t in ids]
 

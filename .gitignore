@@ -12,4 +12,4 @@ notebooks/.ipynb_checkpoints/
 .DS_Store
 **/.DS_Store
 # Blind-audit corpus: kept out of the public repo (indexable anomaly/validation sets).
-#data/*.jsonl
+data/*.jsonl

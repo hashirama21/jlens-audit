@@ -7,8 +7,8 @@ import argparse
 
 import matplotlib.pyplot as plt
 
-from .config import DATA, RESULTS, FIGS, TOP_K, TARGET_LAYER
-from .load_model import get_resid, layers, load
+from .config import DATA, RESULTS, FIGS, TOP_K, TARGET_LAYER, USE_CHAT_TEMPLATE
+from .load_model import get_resid, layers, load, render_input
 from .lens import load_all
 
 
@@ -41,23 +41,26 @@ def orientation_check(lenses, k=10, min_overlap=6):
 
 
 def find_pos(text, tok, pivot):
-    """Position of the last token overlapping the pivot substring. Robust to multi-token
-    pivots (e.g. 'sushi' -> 'su' + 'shi') via character offsets, with a single-token fallback
-    for slow tokenizers."""
-    lo, pv = text.lower(), pivot.lower()
+    """Index of the last token overlapping the pivot substring, in the SAME framing get_resid
+    uses (chat template included) so it lines up with the returned hidden states. Robust to
+    multi-token pivots ('sushi' -> 'su' + 'shi') via character offsets, with a single-token
+    fallback for slow tokenizers."""
+    rendered = render_input(tok, text)
+    add_special = not USE_CHAT_TEMPLATE
+    lo, pv = rendered.lower(), pivot.lower()
     start = lo.rfind(pv)
     if start < 0:
         raise ValueError(f"pivot {pivot!r} not found in text")
     end = start + len(pv)
     try:
-        offsets = tok(text, return_offsets_mapping=True)["offset_mapping"]
+        offsets = tok(rendered, add_special_tokens=add_special, return_offsets_mapping=True)["offset_mapping"]
         for i in range(len(offsets) - 1, -1, -1):
             s, e = offsets[i]
             if s < end and e > start:  # token span overlaps the pivot span
                 return i
     except Exception:
         pass
-    ids = tok(text)["input_ids"]
+    ids = tok(rendered, add_special_tokens=add_special)["input_ids"]
     for i in range(len(ids) - 1, -1, -1):
         if pv in tok.decode(int(ids[i])).lower():
             return i

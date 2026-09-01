@@ -57,3 +57,14 @@ Format par entrée :
 - Doute / ce qui pourrait être faux : le scan inclut désormais les tokens spéciaux du template comme positions (bruit pour le juge, mais fidèle) ; `orientation_check` a un seuil arbitraire (`min_overlap=6/10`) à calibrer au premier run ; rien n'a tourné sur GPU.
 - Prochaine étape : pod → `download.sh` → go/no-go → `gen_pairs generate/review/span/stats` → scan.
 ---
+## 2026-09-01 — Audit post-F1 : régression `find_pos` + cohérence des positions  [compté: NON — fiabilisation]
+- Fait :
+  - **Régression F1 corrigée** : `find_pos` (validate.py) tokenisait le texte BRUT alors que `get_resid` renvoie désormais la séquence templatée → `H[L][pos]` décalé du préfixe template. `smoke`/`pass_at_k` lisaient la mauvaise position. `find_pos` opère maintenant sur `render_input(...)`, même cadrage que le scan. `identity_check`/`orientation_check` n'étaient pas touchés (position-agnostiques).
+  - **DRY du cadrage** : `load_model.render_input` (chaîne exacte envoyée au modèle) devient la source unique ; `to_input_ids` et le nouveau `content_span` s'appuient dessus ; `add_special_tokens=False` sous template (le rendu porte déjà les tokens spéciaux, équivaut à `apply_chat_template(tokenize=True)`) → tokenisation identique entre entrée modèle et recherche de position.
+  - **Tokens du template exclus du scan** : `scan_text` ne sérialise plus que `[lo, hi)` = les positions du contenu (via `content_span`), en gardant les indices ABSOLUS → `anomaly_token_span` et `checks.evidence` restent alignés, moins de bruit et de budget juge.
+  - **Mineurs** : `layers()` fallback exclut désormais 0..3 (`SKIP_FIRST`) et inclut `TARGET_LAYER` ; tag `# ADAPTER` retiré d'`unembed_parts` (noms Qwen confirmés).
+- Vérifié : `pytest tests/test_pure.py` 13/13 ; parse AST des 5 modules touchés. Non couvert hors GPU : `find_pos`/`content_span`/`scan_text` (dépendent du tokenizer Qwen) — à valider au premier run sur pod.
+- Ce que je crois maintenant : positions cohérentes de bout en bout (scan ↔ span ↔ evidence ↔ validation) ; entrée modèle inchangée en ids (refactor équivalent).
+- Doute / ce qui pourrait être faux : `content_span` suppose que `content` apparaît verbatim dans le rendu (fallback = plage complète sinon) ; `orientation_check` garde un seuil arbitraire à calibrer.
+- Prochaine étape : pod → go/no-go → vérifier à la main `find_pos`/`content_span` sur une paire avant le scan complet.
+---
