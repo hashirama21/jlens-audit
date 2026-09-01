@@ -90,3 +90,19 @@ Format per entry:
 - Doubt / what could be wrong: `LAYER_STRIDE=4` left as-is (stride is your scope call); the anchor `J[62]==I` and R-lens RelP provenance still to confirm on the pod via `python -m src.lens`.
 - Next step: pod → `python -m src.lens` (keys 0..62, dtype fp16, anchor==I, R-lens=RelP) → go/no-go → scan.
 ---
+## 2026-09-01 (4) — Pod format inspection confirmed (B0/B2 done) + scope cuts applied  [counted: NO — hardening]
+- Confirmed on the pod (human inspection of lens.pt):
+  - `prefix_len = 3` (chat template prefix = `<|im_start|>user\n`).
+  - `source_layers = 0..62` (63 layers); `skip_first` is a fitting parameter, NOT a row exclusion.
+  - `J` is a dict indexed by layer number, in float16.
+  - **Identity anchor exact to the bit**: `J[62] = I`, off-diagonal exactly 0.0 (not approximately) → `identity_check` has a perfectly solid basis.
+  - `model_id = Qwen/Qwen3.6-27B`, standard estimator, pretrain corpus, 25 prompts, `t_max = 128` — matches the downloaded checkpoint.
+  - The two `provenance` are identical except `config_json`: `"standard"` for J-lens; `"relp"` with `ln_rule`, `identity_rule`, `half_rule`, `include_qk_norms: false` for R-lens. Same model/corpus/25 prompts/t_max/anchor → identical forward, only the gradients differ (exactly what the R-lens post announced). Instrument-to-instrument comparison is clean by construction; keep both provenance strings for the doc appendix.
+  - Caveat: `n_positions: 0.0` is an unfilled field, no consequence — do not cite it as a real counter in the doc.
+- Done (config scope cuts, now explicitly requested):
+  - `LAYER_STRIDE = 8`, `TOP_K = 5`, `PAIRS_PER_FAMILY = 6`, `ADD_GENERATION_PROMPT = True` (deployment framing; content_span still excludes the assistant prompt, causal attention leaves content residuals unchanged). `SKIP_FIRST = 0`, `ENABLE_THINKING = False` already in.
+  - lens.py dict-`_stack`/`_load_layer_map` (with `.to(bf16)`) and load_model `to_input_ids` (render-to-string + `add_special_tokens=False`) already in from f5efc68.
+  - Notebook SETUP prints the grid + VRAM (expect 64 layers, `[0,8,16,24,32,40,48,56,62]`, ~55 GB).
+- Verified offline: `pytest tests/test_pure.py` 13/13; import sweep with a fake J-dict (keys 0..62) → `layers()` = `[0,8,16,24,32,40,48,56,62]`; framing harness 15/15 (now with ADD_GENERATION_PROMPT=True).
+- Next step: pod → SETUP (expect grid above, VRAM ~55 GB; tell me if num_hidden_layers != 64) → `load_all()` → `identity_check` + `orientation_check` (the real break point) → B1.
+---

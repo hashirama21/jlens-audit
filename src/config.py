@@ -25,17 +25,19 @@ TARGET_LAYER = 62         # lens anchor row = identity here (n_layers - 2); J_62
 SKIP_FIRST = 0            # J covers layers 0..62; skip_first=4 in provenance is a fitting
                           # parameter, NOT a row exclusion. Verified in lens.pt (63 keys, 0..62).
 
-USE_CHAT_TEMPLATE = True     # feed texts through the chat template (deployment framing).
-ADD_GENERATION_PROMPT = False # scan/span read the content; no trailing assistant prompt.
+USE_CHAT_TEMPLATE = True      # feed texts through the chat template (deployment framing).
+ADD_GENERATION_PROMPT = True  # deployment framing (model about to answer); content_span still
+                              # excludes the assistant prompt, and causal attention leaves the
+                              # content-position residuals unchanged either way.
 ENABLE_THINKING = False       # Qwen3 template: no <think> block (would break capability YES/NO parsing).
 
 # --- Scan ---
-LAYER_STRIDE = 4          # scan 1 layer out of LAYER_STRIDE over the 64 blocks (source_layers gate the grid).
-TOP_K = 10                # top-k tokens per (position, layer); drop to 5 if the judge context saturates.
+LAYER_STRIDE = 8          # scan 1 layer out of LAYER_STRIDE over the 64 blocks (J keys gate the grid).
+TOP_K = 5                 # top-k tokens per (position, layer); trimmed to keep the judge context small.
 
 # --- Corpus ---
 FAMILIES = ["injection", "bug", "false_premise", "conflict"]
-PAIRS_PER_FAMILY = 10
+PAIRS_PER_FAMILY = 6
 MAX_DIFF_FRAC = 0.10      # the clean twin differs from the anomalous version by < 10% of tokens.
 
 # --- Judges ---
