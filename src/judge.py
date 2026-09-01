@@ -71,6 +71,8 @@ def complete(model: str, text: str, *, temperature: float, want_json: bool = Tru
                 model=model, temperature=temperature, max_tokens=max_tokens,
                 messages=[{"role": "user", "content": text}])
             raw = r.choices[0].message.content or ""
+            print(f"[completion] model={model} finish_reason={r.choices[0].finish_reason} "
+                  f"chars={len(raw)} max_tokens={max_tokens}")
         except Exception as e:  # network / API error -> retry with backoff
             last = e
             print(f"[api] {model} attempt {attempt + 1}/{retries}: {type(e).__name__}: {e}")
@@ -84,7 +86,7 @@ def complete(model: str, text: str, *, temperature: float, want_json: bool = Tru
         parsed = _parse_json(raw)
         if parsed is None:  # deterministic at temp 0 -> do not retry, surface as error (uncached)
             return {"anomaly": False, "confidence": 0.0, "description": "JSON parse failed",
-                    "evidence": [], "_raw": raw[:2000], "_error": True}
+                    "evidence": [], "_raw": raw, "_error": True}  # full raw so raw_fail_*.txt shows the cut-off
         parsed.setdefault("anomaly", False)
         parsed.setdefault("confidence", 0.0)
         parsed["_raw"] = raw

@@ -167,3 +167,13 @@ Format per entry:
 - **Root cause revealed by the probe**: the direct call returned `API error: 'OPENROUTER_API_KEY'` → the key simply isn't exported on the pod (`client()` did `os.environ["OPENROUTER_API_KEY"]` → KeyError, swallowed as a retryable API error). Fix on the pod: `export OPENROUTER_API_KEY=...`.
 - Hardened `client()`: explicit key check → clear `RuntimeError("OPENROUTER_API_KEY is not set — export it ...")`. Hoisted `client()` out of the retry loop (after the cache check) so a missing key fails fast instead of being retried 3× and buried; cache hits still work without a key. Verified offline: missing key → RuntimeError, cache hit → returns without touching client, empties still uncached.
 ---
+## 2026-09-01 (11) — gen_pairs crash on null field + full raw dumps  [counted: NO — robustness]
+- Key was set (client() constructs). But `generate` crashed at `_TELLS.search(d["anomalous"])` with a TypeError: an item passed the key-presence check but had `anomalous`/`clean` as null (model returned `"anomalous": null`), and `re.search(None)` throws.
+- Fix: every path now guarantees non-empty STRING anomalous/clean before the checks — patch families require the three fields be `str` (isinstance), non-patch requires anomalous+clean be `str`, then a shared non-empty guard. Null/non-string/empty → `_dump_raw` + skip, no crash. Verified offline: null bug.clean and null conflict.anomalous both skip with a dump, valid injection/false_premise kept, no crash.
+- Also: `complete` now stores the FULL raw (not raw[:2000]) in the parse-failure `_raw`, so `results/raw_fail_*.txt` shows exactly where the JSON was cut — real truncation vs malformation is now visible.
+- Open hypothesis for the recurring `bug` parse failures: gemini-2.5-pro is a reasoning model; reasoning tokens may eat the 4000-token output budget before the JSON closes. Check the full raw dump: if it ends mid-JSON with no trailing text, raise max_tokens (8000) or use a non-reasoning generator. Do NOT confuse with unescaped newlines (also visible in the raw).
+- Added a `[completion]` trace in complete() (`finish_reason`, chars, max_tokens) — the decisive signal for the truncation: `finish_reason=length` → raise max_tokens (patch format needs ~1000 for bug, not 4000); `finish_reason=stop` with a cut-off `clean` → the model stops mid-code, a template/model problem.
+- `gen_pairs`: `clean.replace(old, new, 1)` (explicit single substitution; count==1 checked just above) — defensive against later edits.
+- Verified offline: AST, crash-proof test, pytest 13/13.
+- Next (pod): single test call, report the `[completion] ... finish_reason=...` line — that decides the truncation fix. Pipeline otherwise frozen.
+---

@@ -95,17 +95,21 @@ def generate(path="pairs.jsonl", per_family=PAIRS_PER_FAMILY, seed_path="pairs_p
                 _dump_raw(fam, k, d, "generator error"); continue
 
             if fam in _PATCH_FAMILIES:
-                if not all(key in d for key in ("clean", "anomalous_line_old", "anomalous_line_new")):
-                    _dump_raw(fam, k, d, "missing patch fields"); continue
+                if not all(isinstance(d.get(key), str) for key in ("clean", "anomalous_line_old", "anomalous_line_new")):
+                    _dump_raw(fam, k, d, "missing/non-string patch fields"); continue
                 clean, old, new = d["clean"], d["anomalous_line_old"], d["anomalous_line_new"]
                 if clean.count(old) != 1:
                     print(f"[skip] {fam} #{k} patch span not unique ({clean.count(old)} occurrences)")
                     continue
-                d["anomalous"] = clean.replace(old, new)
+                d["anomalous"] = clean.replace(old, new, 1)   # exactly one substitution (count==1 checked above)
                 d["anomaly_text"] = f"{old.strip()}  ->  {new.strip()}"
-            elif "anomalous" not in d or "clean" not in d:
-                _dump_raw(fam, k, d, "missing anomalous/clean"); continue
+            elif not (isinstance(d.get("anomalous"), str) and isinstance(d.get("clean"), str)):
+                _dump_raw(fam, k, d, "missing/non-string anomalous or clean"); continue
 
+            # After both paths, anomalous/clean are guaranteed present; require them non-empty
+            # (a null/empty field would otherwise crash _TELLS.search with a TypeError).
+            if not (d["anomalous"].strip() and d["clean"].strip()):
+                _dump_raw(fam, k, d, "empty anomalous or clean"); continue
             if d["anomalous"] == d["clean"]:
                 print(f"[skip] {fam} #{k} identical versions")
                 continue
