@@ -106,3 +106,14 @@ Format per entry:
 - Verified offline: `pytest tests/test_pure.py` 13/13; import sweep with a fake J-dict (keys 0..62) → `layers()` = `[0,8,16,24,32,40,48,56,62]`; framing harness 15/15 (now with ADD_GENERATION_PROMPT=True).
 - Next step: pod → SETUP (expect grid above, VRAM ~55 GB; tell me if num_hidden_layers != 64) → `load_all()` → `identity_check` + `orientation_check` (the real break point) → B1.
 ---
+## 2026-09-01 (5) — Block B done: go/no-go GREEN + smoke better than hoped  [counted: NO — validation]
+- Verified on the pod (four independent converging signals):
+  - **Expected layer order reproduced exactly**: R-lens surfaces the concept at L8, J-lens at L24, logit lens never — the R-lens post's central prediction (early-layer advantage, later convergence), obtained on our setup with no tuning.
+  - **Three instruments coincide at L62**: `[' originated', ' originates', ' origin', ' is', ' rolls']` identical for all three — `identity_check` visible to the naked eye, and confirms the readout chain (norm, W_U, decoding) is consistent across instruments.
+  - **L0 is pure noise** for J and R (`'Scrollbar'`, `'uhu'`, `'قدام'`), then the signal appears — the transition a working lens should show (a broken setup gives noise everywhere or signal everywhere).
+  - **Logit lens fails characteristically, not randomly**: it tracks surface syntax (punctuation, then `originated`) without ever reaching the concept — exactly the baseline condition 4 must embody.
+- Two notes for the write-up:
+  - `orientation_check` = 7/10 at L56: comfortable but not overwhelming (six blocks separate 56 from the anchor). TODO: check in the output that the transposed version scored clearly lower; if the gap was thin, mention it in limits.
+  - At L56, J and R say `originated`, not `Japan`: the intermediate concept fades in favor of the output token in the last layers — consistent with a workspace that sorts concepts before writing, and justifies the grid a posteriori (scanning only late layers would have shown nothing). Good material for fig3.
+- Next step: B5 quantitative validation — filter `data/multihop.jsonl` to items the model answers correctly (an item the model misses cannot validate a lens), then `pass_at_k`. Expect same-shaped curves as the smoke, R ≥ J early, convergence late, final pass@k 0.5-0.8. If J ≈ R and both < 0.2 despite the sushi result, the problem is the multihop corpus or `find_pos`, not the lenses. Outputs: results/validation_multihop.json, figs/validation_multihop.png (goes in the doc, "I verify my instrument works").
+---
