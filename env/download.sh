@@ -11,4 +11,4 @@ hf download Qwen/Qwen3.6-27B --local-dir "$MODELS/qwen3.6-27b"
 hf download camilablank/workspace-lenses \
   --include "qwen3.6-27b/j-lens/*" "qwen3.6-27b/r-lens/*" "README.md" \
   --local-dir "$LENSES"
-echo "OK. Lire $LENSES/README.md AVANT de toucher src/lens.py"
+echo "OK. Read $LENSES/README.md BEFORE touching src/lens.py"

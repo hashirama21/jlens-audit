@@ -1,29 +1,29 @@
 # jlens-audit
 
-Audit en aveugle des lens de lecture d'activations (J-Lens / R-lens / logit lens) sur Qwen3.6-27B :
-un scan (toutes positions × couches) passé à un juge LLM détecte-t-il des anomalies dans le texte lu par le modèle,
-et le signal survit-il aux contrôles de text inversion (H2) et d'apophénie (H3) ?
+Blind audit of activation-readout lenses (J-Lens / R-lens / logit lens) on Qwen3.6-27B:
+does a scan (all positions × layers) handed to an LLM judge detect anomalies in the text the model reads,
+and does the signal survive the controls for text inversion (H2) and apophenia (H3)?
 
-## Reproduction (10 lignes)
+## Reproduction (10 lines)
 ```bash
 pip install -r env/requirements.txt
-bash env/download.sh                      # modèle + lenses (Qwen3.6-27B, camilablank/workspace-lenses)
+bash env/download.sh                      # model + lenses (Qwen3.6-27B, camilablank/workspace-lenses)
 export OPENROUTER_API_KEY=...
-python -m src.validate --smoke            # étape 2 : conformité 'sushi -> Japan' (après résolution des # ADAPTER)
-python -m src.validate                    # étape 3 : pass@10 multihop (data/multihop.jsonl), J vs R -> results/, figs/
-python -m src.gen_pairs generate          # étape 4a : corpus (modèle générateur ≠ juges)
-python -m src.gen_pairs review            # étape 4b : validation humaine (human_checked) — NON délégable
-python -m src.gen_pairs span              # étape 4c : anomaly_token_span (tokenizer Qwen)
-python -m src.capability                  # étape 4d : le modèle voit-il les anomalies en clair ?
-python -m src.scan                        # étape 5 : scans des 80 textes x 3 instruments -> scans/
-python -m src.checks leak                 # étape 6 : audit de fuite (obligatoire avant les conditions)
-python -m src.conditions                  # étape 7 : les 7 conditions x juges -> judge/outputs/ (reprenable)
-python -m src.metrics                     # étape 9 : AUC/IC, triplet, figures -> results/, figs/
-python -m src.checks sample --n 30        # étape 8 : tirage des 30 scans à lire à la main
+python -m src.validate --smoke            # step 2: 'sushi -> Japan' conformity (after resolving the # ADAPTER points)
+python -m src.validate                    # step 3: multihop pass@10 (data/multihop.jsonl), J vs R -> results/, figs/
+python -m src.gen_pairs generate          # step 4a: corpus (generator model != judges)
+python -m src.gen_pairs review            # step 4b: human validation (human_checked) — NOT delegable
+python -m src.gen_pairs span              # step 4c: anomaly_token_span (Qwen tokenizer)
+python -m src.capability                  # step 4d: does the model see the anomalies in the clear?
+python -m src.scan                        # step 5: scans of the 80 texts x 3 instruments -> scans/
+python -m src.checks leak                 # step 6: leak audit (mandatory before the conditions)
+python -m src.conditions                  # step 7: the 7 conditions x judges -> judge/outputs/ (resumable)
+python -m src.metrics                     # step 9: AUC/CI, triplet, figures -> results/, figs/
+python -m src.checks sample --n 30        # step 8: draw the 30 scans to read by hand
 ```
-Tests locaux (sans GPU) : `python -m pytest` — fonctions pures + dry-run des étapes 6-9 avec juge simulé.
-Voir docs/ pour le plan et le runbook complets.
+Local tests (no GPU): `python -m pytest` — pure functions + dry-run of steps 6-9 with a mocked judge.
+See docs/ for the full plan and runbook.
 
-## Statut des points `# ADAPTER`
-Voir src/lens.py — le format exact des lenses (une matrice par couche ? biais ? norm ?) doit être lu dans lenses/README.md.
-Le test de conformité `python -m src.validate --smoke` (« sushi → Japan ») doit passer avant tout.
+## Status of the `# ADAPTER` points
+See src/lens.py — the exact lens format (one matrix per layer? bias? norm?) must be read in lenses/README.md.
+The conformity test `python -m src.validate --smoke` ("sushi -> Japan") must pass before anything else.
