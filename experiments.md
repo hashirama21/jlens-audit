@@ -184,3 +184,10 @@ Format per entry:
 - generate() max_tokens LEFT at 4000 (pipeline frozen pending the 1200 direct test). CAUTION for the tuning step: the proposed `1200 if bug else 600` would re-truncate injection/conflict — those keep TWO full versions (~500 tokens) + gemini reasoning, so they need MORE than 600, not less; only bug/false_premise are compact patch formats. Generation tokens are cheap, so err high per family.
 - Verified offline: AST, cache-key test, pytest 13/13.
 ---
+## 2026-09-01 (13) — generator switched to gemini-2.5-flash (definitive truncation fix)  [counted: NO — infra]
+- Confirmed the reasoning-budget cause: 600/1200/3000 all → `finish_reason=length`, only ~376 chars at 3000. Not a max_tokens problem — gemini-2.5-pro's thinking tokens consume the output budget before the JSON closes.
+- Fix: `GENERATOR_MODEL` default `google/gemini-2.5-pro` → `google/gemini-2.5-flash`. Still Google (third family, distinct from Anthropic judgeA + OpenAI judgeB); code + one-line mutation doesn't need a reasoning model. max_tokens stays 4000 (a cheap ceiling on Flash; no per-family tuning needed). Env-overridable.
+- Escalation if Flash still shows finish_reason=length (it's a hybrid, thinking can still trigger): `google/gemini-2.5-flash-lite`, or disable reasoning via OpenRouter (`extra_body={"reasoning": {"enabled": False}}`) — offered, not applied.
+- Verified offline: GENERATOR_MODEL loads as gemini-2.5-flash, pytest 13/13.
+- Next (pod): pull, purge stale cache if needed, run generate (or the direct Flash test) and check `[completion] finish_reason=stop` with valid JSON.
+---

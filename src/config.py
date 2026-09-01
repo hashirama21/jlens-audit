@@ -53,7 +53,10 @@ PROMPT_VERSIONS = ["v1", "v2"]
 # --- Corpus generator ---
 # A THIRD family, distinct from both judges (Anthropic judgeA, OpenAI judgeB), to avoid a
 # self-grading confound. Deliberately not a Qwen: that is the family under audit (Qwen3.6-27B).
-GENERATOR_MODEL = os.environ.get("GENERATOR_MODEL", "google/gemini-2.5-pro")
+# Flash, not Pro: gemini-2.5-pro is a reasoning model whose thinking tokens consumed the output
+# budget and truncated the JSON (finish_reason=length, ~few hundred chars even at max_tokens=3000).
+# Generating clean code + a one-line mutation needs a fast structured generator, not deep reasoning.
+GENERATOR_MODEL = os.environ.get("GENERATOR_MODEL", "google/gemini-2.5-flash")
 GENERATOR_TEMPERATURE = 0.9   # variety at generation time; the judge stays at temperature 0.
 
 # --- Metrics ---
