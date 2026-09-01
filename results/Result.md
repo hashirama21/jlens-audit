@@ -384,3 +384,29 @@ Two observations from the raw file (for orientation, not conclusions):
 - Classify false positives on twins into (a) evokes family, (b) evokes own clean content,
   (c) invents — the proportion of (c) is the direct H3 estimate. §15.1 (fabricated evidence) and
   §15.2 (clean false-alarm) are the quantitative backbone for this classification.
+
+## 15.5 Block H #1 worksheet — objective scaffold (→ results/blockH_worksheet.md/.csv)
+Agreed split (human's call): the agent pre-fills the OBJECTIVE columns; the human fills the
+judgment columns (`related?`, FP class a/b/c). Reproduces checks.sample's exact seed-0, 30-row
+selection; per-row present/in_zone computed with checks.evidence's exact logic.
+- Outcomes on the 30: **TP 11, TN 10, FP 5, FN 4**. Evidence fidelity on these 30: **117
+  present / 184 cited**.
+- Objective red flag (agent, not a WHY-judgment): **bug_02 clean rlens judgeB, conf 0.90 — 17
+  evidence cited, 0 present** (a clean twin flagged with 17 fabricated evidence tokens); the same
+  item's TP row cites 12, 0 present — bug_02/rlens cites tokens never in the scan regardless of
+  label.
+- **Caveat vs the plan's "10 correct + 10 false positives":** the seed-0 sample yields only 5
+  FP. A dedicated worksheet of ALL clean-flagged-anomalous rows (every instrument/judge) is the
+  proper H3 denominator — recommended, not yet generated.
+- Judgment columns (`related?`, a/b/c) remain the human's (CLAUDE.md).
+
+## 15.6 Block H #2 — independent AUC recompute (cross-check of metrics.py)
+From-scratch recompute: reads verdicts.jsonl directly, dedups by VERDICT_KEY (keep last), drops
+_error, AUC via the Mann-Whitney rank formula — **no import of src.metrics**.
+- **Coincides with metrics.py to <1e-6** on all 6 cross-checked cells (scan jlens/logit/rlens ×
+  judges, scan_permuted, reconstruction). → metrics.py's AUC path is validated, no bug.
+- Pooled scan AUC per instrument (mean signed score per id/version, judges+prompts pooled):
+  **jlens 0.748, rlens 0.802, logit 0.839** (nP=nN=11). logit ≥ rlens ≥ jlens — consistent with
+  §14.4 (blind-scan signal is not lens-specific; the "dumb" logit lens leads).
+- NB: this is a *verification* cross-check. Your own independent recompute for pivot confidence
+  is still yours (CLAUDE.md); it should land on the same numbers.
