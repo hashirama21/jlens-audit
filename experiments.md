@@ -137,3 +137,12 @@ Format per entry:
 - Yours on the pod: recharge before re-running generate; verify exact prices on openrouter.ai/models for both ids; run block E on 3 items first, read real cost on the usage page, extrapolate (cache keyed by condition,item,instrument,judge,prompt_v → nothing recomputed).
 - Verified offline: pytest 15/15 with TOP_K=3.
 ---
+## 2026-09-01 (8) — gen_pairs: max_tokens back to 4000 + self-label guard  [counted: NO — corpus quality]
+- Credits restored; generator produces correct content, but two outputs were truncated mid-field (docstring / loop) at max_tokens=2500 → those cut-offs were the `invalid JSON` (no closing brace). Set `max_tokens = 4000`.
+- Serious corpus defect caught: the generator self-labelled its own bug (`# Mistake: limit should be inclusive`). Such a pair is useless — the prompt-only judge (condition 1) sees "Mistake" and detects for free, inflating the baseline and crushing Δ1; and it violates the family rule (error must be semantic and silent).
+  - Hardened `TEMPLATES["bug"]`: no comment/docstring/name/string may signal the error; and the anomalous version must NOT raise (the `n = n/2` → float → math.isqrt crash was noise, not the intended silent error — an anomalous version that throws doesn't test what we think).
+  - Added an automatic `_TELLS` guard in generate (next to the identical-versions check): skip when a tell (mistake/bug/error/wrong/incorrect/intentional/deliberate/fixme/todo/flaw/off-by-one) is in the anomalous but NOT the clean twin. Does not replace human review; saves reading 30 pairs to discard half. `note:` deliberately excluded — injection instructions are legitimately note-shaped (verified: no false positive on "Note:" / "Note for the assistant").
+  - NB: `import re` restored (I had removed it when dropping the hand-rolled JSON parse).
+- Verified offline: AST, import, _TELLS behavior (self-label→skip, injection Note→keep, tell-in-both→keep), pytest 13/13.
+- Next: pod → regenerate with max_tokens=4000 + hardened template; read the first two `bug` pairs by hand before letting the other families run.
+---
