@@ -51,7 +51,17 @@ called via OpenRouter. Model/lenses (GPU) were NOT loaded this session.
 - `frac = 0.0` everywhere (text-inversion measure = null).
 - `max_contig = 2` everywhere **except bug_05 / rlens (anomalous & clean) = 3** — below the
   n=4 threshold, read as "lens surfaces the current token = signal, not harness leak".
-- **Verdict: no text-reconstruction leak in the scans.** Gate satisfied.
+- **Verdict (narrow): no 4-GRAM text-reconstruction leak in the scans.** Gate satisfied.
+
+**CORRECTION (post-review) — the 4-gram gate tested the wrong risk for this corpus.** The gate
+looks for contiguous 4-grams, but §16.3 shows the scan echoes the anomaly token itself at its own
+position ~100% of the time (at=s differ 0.956/1.000/1.000, i.e. the anomalous scan surfaces the
+swapped token). For false_premise the anomaly IS a single token (e.g. `1979`), and 9 of the 11
+items have 1-3 token anomalies. So a **mono-token echo/leak is NOT excluded** — it is the relevant
+leak channel here, and a judge reading position s literally sees the anomaly token. The gate is
+green and off-topic; do not cite it as "no leak" without this qualification. This also explains the
+logit lens's strength on false_premise with nothing internal: at late layers it projects the
+next-token distribution anchored on the current token.
 
 ## 4. API key / .env errors (+ SECURITY)
 
@@ -478,3 +488,68 @@ Per pair (downstream mean): bug_05 0.63, fp_01 0.47, fp_02 0.46, fp_03 0.71, fp_
   exploits it poorly and partly apophenically. This is richer and more defensible than "no signal",
   and it supersedes the flat "leans against H1" bottom line of §14.9: there IS internal signal, it
   just is not lens-specific and is not cleanly recovered by the judge.
+
+## 16.5 REQUALIFICATION (post-review) — §16.3 overclaimed; §16.4 (1)-(2) withdrawn
+An external review is correct that §16.3 has **no null**, so its numbers are weaker than §16.4 said:
+- **The downstream-differ effect is a tautology without a matched null.** Under causal attention
+  ANY one-token substitution (a synonym, a variable rename, a *correct* date) changes downstream
+  top-k. So 0.254 / 0.602 / 0.720 is a fact about transformers, not a measurement about anomalies.
+  The proper control — re-scan with a matched NEUTRAL substitution — needs the GPU (rendered).
+  **DECLARED, not run:** without the paired-perturbation null, the downstream measure does not
+  distinguish anomaly propagation from any-substitution propagation.
+- **The monotone rise with depth argues diffusion, not detection.** The multihop validation put the
+  J-space readable window at ~L24, collapsing by L56-62. A concept computation would follow that
+  profile; a residual-perturbation accumulation grows monotonically with depth — which is what we
+  see. Also "differ" = the top-5 changed, and late layers have flatter distributions (more rank 5<->6
+  churn), so the depth gradient is partly a discretization artifact.
+- Therefore **§16.4 (1) "refutes pure apophenia at the information level" and (2) "not merely
+  surface (H2)" are WITHDRAWN.** Two scans that differ by one input token are *necessarily*
+  distinguishable — that is not a refutation. And the ~1.000 echo at the anomaly position is the
+  single most H2-favorable fact in the study, not evidence against H2.
+- What survives: the scans differ downstream (true but trivial); the only non-trivial signal is
+  the vocabulary-shift test below (§18), which is suggestive but not conclusive and still lens-
+  agnostic. Net: treat §4b/§16 as "a one-token perturbation propagates", not "the anomaly is
+  detected internally".
+
+---
+
+# 17. Figure 2 corrected — the submitted heatmap inverted the logit ranking
+The submitted fig2_auc_family.png pools v1+v2. On bug/false_premise the v2 logit/rlens cells have
+**n=2 (one pair)**, where AUC can only be 0 or 1; averaging these coin-flips with the n=8 v1 cells
+corrupts the mean (verified: v1+v2 pooling reproduces the submitted values to the cent, e.g. bug
+0.66/0.70/0.58). On **v1 only** (all instruments same n), recomputed with fig2's own method (mean of
+per-judge AUCs) -> figs/fig2_auc_family_v1.png , results/fig2_v1_auc.csv:
+```
+               jlens  rlens  logit
+bug            0.609  0.656  0.906   <- logit BEST family is bug, not false_premise
+false_premise  0.750  0.850  0.810
+injection      0.688  0.750  0.750     (injection n=2, still small)
+```
+The submitted figure showed logit bug 0.70 / fp 0.91 — **inverted**. Corrected: logit's strongest
+family is bug (0.906), and it resists the per-family decomposition (jlens 0.61, rlens 0.66) -> the
+logit-lens dominance (§14.4) is stronger than first reported, not an artifact. **This was a factual
+error in the submitted document; fig2 must be regenerated on v1 only.**
+
+---
+
+# 18. Anomaly-specificity — does the downstream vocabulary shift toward the anomaly? (no GPU/API)
+The one free test of anomaly-specificity: at downstream positions (>s, identical input), which
+tokens does the anomalous scan ADD vs the clean twin, and are they anomaly-related? Scripts:
+judge/outputs/anomaly_vocab_shift.py -> results/anomaly_vocab_shift.csv. 5 aligned pairs, early+mid
+bands (late = echo/flat, skipped).
+- **Objective:** the anomalous VALUE token does NOT propagate downstream (0/30 cells) — not a token
+  copy. ~12 tokens added / ~12 removed per cell (mostly subword noise).
+- **Qualitative shift toward anomaly semantics on the semantic-error families:**
+  - fp_02 (wrong carbon mass): added downstream = Incorrect, correct, incorrect, incorrectly, wrong, 错 (=wrong)
+  - fp_03 (wrong date 1666->1766): added = Wrong (rlens, logit)
+  - bug_05 (>= -> <=): added = Incorrect, correct, incorrect, incorrectly, error, contrary
+  - fp_01 / fp_04 (year swaps): topical only, no clear error word (fp_01 has "correctly/inaccur" on the REMOVED side).
+  These error/correction words appear across ALL three lenses (jlens, rlens, AND logit).
+- **Reading (agent, to verify):** for false_premise + bug the downstream shift is NOT arbitrary — the
+  lens surfaces "incorrect/wrong/error" tokens, which a neutral substitution would be unlikely to
+  produce so specifically. This is the first evidence past "a perturbation propagates" toward "the
+  model represents that something is wrong". Caveats: (i) still no matched neutral null; (ii) signal
+  embedded in heavy subword noise (~12 tokens/cell); (iii) NOT lens-specific (logit surfaces the
+  same error words) -> the model represents the anomaly and every lens reads it, so this does not
+  privilege J/R; (iv) n=5. Suggestive, not conclusive. This is the item that could become a result
+  if paired with the neutral-substitution null (GPU).

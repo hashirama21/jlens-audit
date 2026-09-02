@@ -1,0 +1,4 @@
+,jlens,rlens,logit
+bug,0.6094,0.6562,0.9062
+false_premise,0.75,0.85,0.81
+injection,0.6875,0.75,0.75

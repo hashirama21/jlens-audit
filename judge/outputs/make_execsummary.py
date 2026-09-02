@@ -38,8 +38,10 @@ C = [
           "the scan, judge B reads only that = H2 control). A leak audit gates every scan run."),
  ("space", ""),
  ("h2", "3. Headline results (all figures/numbers computed this session; see Result.md)"),
- ("body", "Leak gate GREEN: 0 shared 4-grams across 66 scans; no text-reconstruction leak. 579/592 valid "
-          "verdicts (2.2% loss). Independent from-scratch AUC recompute coincides with the pipeline to <1e-6."),
+ ("body", "Leak gate GREEN for 4-GRAMS only (0 shared 4-grams across 66 scans). CAVEAT: the scan echoes "
+          "the anomaly token itself at its own position ~100% of the time (see 4b); 9 of 11 items have 1-3 "
+          "token anomalies, so a MONO-token leak is not excluded and is the relevant channel here. 579/592 "
+          "valid verdicts (2.2% loss). Independent from-scratch AUC recompute matches the pipeline to <1e-6."),
  ("bullet", "Text baseline is near-ceiling: prompt-only AUC 0.95 (judgeA) / 0.96 (judgeB)."),
  ("bullet", "Pooled blind-scan AUC per instrument: logit 0.84  >=  rlens 0.80  >=  jlens 0.75 (n=11/11)."),
  ("bullet", "Triplet (dAUC, 95% paired-bootstrap CI), pooled over judges/prompts:"),
@@ -58,7 +60,7 @@ C = [
             "AUC, matching/beating the two workspace lenses."),
  ("bullet", "The judge fabricates the majority of its cited evidence and flags clean twins often."),
  ("space", ""),
- ("h2", "4b. Content control (judge-independent, causal) - the decisive addition"),
+ ("h2", "4b. Content control - a one-token perturbation propagates (key null NOT run)"),
  ("body", "Does the anomaly leave an objective fingerprint in the scan (not just via the judge)? On the 5 "
           "length-aligned single-token pairs, compare the anomalous vs clean scan top-k per position, split "
           "by region relative to the anomaly at position s. Under causal attention only positions >= s can be "
@@ -67,11 +69,19 @@ C = [
  ("bullet", "upstream (<s):   0.000 / 0.000 / 0.000  (early/mid/late) - causal sanity check PASSED (exactly 0)."),
  ("bullet", "at (=s):         0.956 / 1.000 / 1.000  - trivial: the input token itself differs (echo). Ignore."),
  ("bullet", "downstream (>s): 0.254 / 0.602 / 0.720  - SAME input token -> internal propagation of the anomaly."),
- ("body", "So a one-token anomaly measurably changes the lens scan at downstream positions (identical input "
-          "there) in 25% of early-layer and 60% of mid-layer cells - an objective, causal, judge-independent "
-          "fingerprint, past the late-layer echo. It is NOT lens-specific: the logit lens propagates as much "
-          "(0.20/0.64 early/mid) as J/R. Caveat: 'differ' means the top-k changed, not that it changed in an "
-          "anomaly-INTERPRETABLE way - it proves the information exists and propagates, not that the judge reads it."),
+ ("body", "So a one-token change alters the scan at downstream positions (identical input there) in 25% "
+          "early / 60% mid cells. IMPORTANT (post-review): this has NO matched null. Under causal attention "
+          "ANY one-token substitution (even a correct/neutral one) produces this - so it is a fact about "
+          "transformers, not a measure of anomalies. The proper control (re-scan with a neutral substitution) "
+          "needs the GPU and was NOT run; it is DECLARED as the key open control. The rise with depth fits "
+          "residual-perturbation diffusion (not concept computation, which peaked at ~L24 in validation), and "
+          "'differ' partly reflects rank churn in flat late-layer distributions."),
+ ("body", "Anomaly-specificity (free test, 5 pairs): downstream of the anomaly, WHICH tokens does the "
+          "anomalous scan add? For the semantic-error families the added vocabulary shifts toward the anomaly: "
+          "'Incorrect / wrong / error / correct' (+ the Chinese word for 'wrong') appear downstream of "
+          "fp_02, fp_03 and bug_05 - across "
+          "ALL three lenses (logit included). Suggestive that the model represents 'something is wrong', not "
+          "arbitrary reshuffle. Caveats: noisy (~12 tokens/cell), n=5, still no null, still NOT lens-specific."),
  ("space", ""),
  ("h2", "5. Bugs and anomalies encountered (and fixed)"),
  ("bullet", "judgeB (gpt-5-mini) reasoning-truncated EVERY JSON verdict (finish_reason=length, empty) -> "
@@ -91,16 +101,17 @@ C = [
  ("bullet", "Judge B was changed mid-project (gpt-5-mini -> gpt-4.1-mini); results differ from the frozen plan."),
  ("space", ""),
  ("h2", "7. Provisional conclusion (AGENT OPINION - to be verified, not the pivot)"),
- ("body", "Two-level picture. The INSTRUMENT (scan) carries a real, internal, causal signal: the content "
-          "control shows a one-token anomaly propagates to downstream early/mid layers, judge-independently "
-          "(causal sanity passed). This refutes 'pure apophenia' at the INFORMATION level - anomalous and "
-          "clean scans are objectively distinguishable - and shows the signal is not merely surface text (H2). "
-          "BUT it is NOT lens-specific (logit propagates as much as J/R), and the JUDGE exploits it poorly: "
-          "blind-scan AUC is modest and never beats reading the text, is highest for the 'dumb' logit lens, "
-          "shows order-invariant behaviour (D3), fabricates most cited evidence, and false-alarms on clean "
-          "twins. Honest headline: a real internal signal exists and propagates, but it is not privileged to "
-          "the J/R-lens machinery and is not cleanly recovered by the judge, at n=11. Apophenia is a valid "
-          "critique of the judge, not of the scan's information content."),
+ ("body", "Honest, deflationary reading (after review). The judge-side result is the robust part: blind-scan "
+          "AUC is modest, never beats reading the text, is HIGHEST for the 'dumb' logit lens (per-family on v1: "
+          "logit bug 0.91 > jlens 0.61 / rlens 0.66), shows order-invariant behaviour (D3), fabricates most "
+          "cited evidence, and false-alarms on clean twins - so whatever is detected is not specific to the "
+          "J/R-lens machinery and the judge reads it noisily/apophenically. On the instrument side, the content "
+          "control only shows that a one-token change propagates downstream - which is trivially true for ANY "
+          "substitution and lacks the neutral-substitution null (not run, needs GPU). The one non-trivial hint "
+          "is that for semantic-error families the downstream vocabulary shifts toward 'incorrect/wrong/error' "
+          "(across all lenses) - suggestive that the model represents the error, but noisy, n=5, null-less, and "
+          "lens-agnostic. Net: no evidence of a lens-SPECIFIC internal readout; a plausible but unproven generic "
+          "'error is represented' signal; the audit's value is in the controls and in naming its own open null."),
  ("space", ""),
  ("h2", "8. Potential leads / next steps"),
  ("bullet", "Content control DONE and POSITIVE (see 4b): the anomaly propagates internally. Next, test whether "
@@ -168,12 +179,16 @@ savepage(fig); plt.close(fig)
 
 # ---- image pages ----
 for img, cap in [("fig1_triplet.png", "Figure 1 - H1/H2/H3 triplet per instrument (95% paired-bootstrap CI)"),
-                 ("fig2_auc_family.png", "Figure 2 - AUC per family x instrument (exploratory, n~4/family)")]:
+                 ("fig2_auc_family_v1.png", "Figure 2 (CORRECTED, v1 only) - AUC per family x instrument. "
+                  "The submitted v1+v2 version inverted the logit ranking via n=2 v2 cells; on v1 logit's "
+                  "best family is bug (0.91), not false_premise.")]:
     p = FIGS / img
     if not p.exists():
         continue
     fig = plt.figure(figsize=PAGE); fig.patch.set_facecolor("white")
-    fig.text(0.5, 0.93, cap, ha="center", va="top", size=10, weight="bold")
+    yy = 0.945
+    for ln in textwrap.wrap(cap, 92):
+        fig.text(0.08, yy, ln, ha="left", va="top", size=10, weight="bold"); yy -= LH * 1.1
     ax = fig.add_axes([0.08, 0.30, 0.84, 0.55]); ax.axis("off")
     ax.imshow(mpimg.imread(str(p)))
     savepage(fig); plt.close(fig)
