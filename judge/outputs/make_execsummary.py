@@ -58,6 +58,21 @@ C = [
             "AUC, matching/beating the two workspace lenses."),
  ("bullet", "The judge fabricates the majority of its cited evidence and flags clean twins often."),
  ("space", ""),
+ ("h2", "4b. Content control (judge-independent, causal) - the decisive addition"),
+ ("body", "Does the anomaly leave an objective fingerprint in the scan (not just via the judge)? On the 5 "
+          "length-aligned single-token pairs, compare the anomalous vs clean scan top-k per position, split "
+          "by region relative to the anomaly at position s. Under causal attention only positions >= s can be "
+          "affected; positions > s carry the SAME input token in both twins, so any difference there is the "
+          "anomaly's internal contextual propagation. Fraction of (position, layer) cells that differ:"),
+ ("bullet", "upstream (<s):   0.000 / 0.000 / 0.000  (early/mid/late) - causal sanity check PASSED (exactly 0)."),
+ ("bullet", "at (=s):         0.956 / 1.000 / 1.000  - trivial: the input token itself differs (echo). Ignore."),
+ ("bullet", "downstream (>s): 0.254 / 0.602 / 0.720  - SAME input token -> internal propagation of the anomaly."),
+ ("body", "So a one-token anomaly measurably changes the lens scan at downstream positions (identical input "
+          "there) in 25% of early-layer and 60% of mid-layer cells - an objective, causal, judge-independent "
+          "fingerprint, past the late-layer echo. It is NOT lens-specific: the logit lens propagates as much "
+          "(0.20/0.64 early/mid) as J/R. Caveat: 'differ' means the top-k changed, not that it changed in an "
+          "anomaly-INTERPRETABLE way - it proves the information exists and propagates, not that the judge reads it."),
+ ("space", ""),
  ("h2", "5. Bugs and anomalies encountered (and fixed)"),
  ("bullet", "judgeB (gpt-5-mini) reasoning-truncated EVERY JSON verdict (finish_reason=length, empty) -> "
             "switched to gpt-4.1-mini (non-reasoning, still OpenAI family)."),
@@ -76,15 +91,23 @@ C = [
  ("bullet", "Judge B was changed mid-project (gpt-5-mini -> gpt-4.1-mini); results differ from the frozen plan."),
  ("space", ""),
  ("h2", "7. Provisional conclusion (AGENT OPINION - to be verified, not the pivot)"),
- ("body", "The available evidence LEANS AGAINST H1 (privileged internal readout): the 'dumb' logit lens leads "
-          "on the blind scan, and the signal is order-invariant. H2 vs H3 stays UNRESOLVED because the "
-          "reconstruction control is broken and the permutation control does not destroy token content. "
-          "Honest headline: no clean survival of a lens-specific signal once surface vocabulary is controlled, "
-          "at n=11. This matches the project's own prior: the value is in the controls, not the raw AUC."),
+ ("body", "Two-level picture. The INSTRUMENT (scan) carries a real, internal, causal signal: the content "
+          "control shows a one-token anomaly propagates to downstream early/mid layers, judge-independently "
+          "(causal sanity passed). This refutes 'pure apophenia' at the INFORMATION level - anomalous and "
+          "clean scans are objectively distinguishable - and shows the signal is not merely surface text (H2). "
+          "BUT it is NOT lens-specific (logit propagates as much as J/R), and the JUDGE exploits it poorly: "
+          "blind-scan AUC is modest and never beats reading the text, is highest for the 'dumb' logit lens, "
+          "shows order-invariant behaviour (D3), fabricates most cited evidence, and false-alarms on clean "
+          "twins. Honest headline: a real internal signal exists and propagates, but it is not privileged to "
+          "the J/R-lens machinery and is not cleanly recovered by the judge, at n=11. Apophenia is a valid "
+          "critique of the judge, not of the scan's information content."),
  ("space", ""),
  ("h2", "8. Potential leads / next steps"),
- ("bullet", "Add a FOREIGN-SCAN control (judge a different clean item's scan) to destroy token content and "
-            "actually separate H3 from a position-invariant readout - cheapest high-value experiment."),
+ ("bullet", "Content control DONE and POSITIVE (see 4b): the anomaly propagates internally. Next, test whether "
+            "the downstream change is anomaly-INTERPRETABLE (not just any reshuffle) - e.g. does an anomaly-"
+            "trained probe read it, or does the surfaced vocabulary shift toward the anomaly semantics."),
+ ("bullet", "Foreign-scan control (judge a different clean item's scan) to bound the JUDGE-side apophenia "
+            "directly, now that the scan is known to contain real signal."),
  ("bullet", "Fix or drop the reconstruction channel before trusting D2 (content_filter + degeneracy)."),
  ("bullet", "Classify ALL false positives (not just the 5 in the seed-0 sample) into (a) evokes family / "
             "(b) evokes own content / (c) invents; proportion (c) is the direct H3 estimate."),
@@ -105,11 +128,8 @@ STYLE = {
 }
 
 pdf = PdfPages(str(RESULTS / "executive_summary.pdf"))
-_saved = []
 def savepage(f):
     pdf.savefig(f)
-    if not _saved:
-        f.savefig(str(RESULTS / "_execpg1.png"), dpi=110); _saved.append(1)
 
 def new_page():
     fig = plt.figure(figsize=PAGE)

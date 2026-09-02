@@ -410,3 +410,71 @@ _error, AUC via the Mann-Whitney rank formula — **no import of src.metrics**.
   §14.4 (blind-scan signal is not lens-specific; the "dumb" logit lens leads).
 - NB: this is a *verification* cross-check. Your own independent recompute for pivot confidence
   is still yours (CLAUDE.md); it should land on the same numbers.
+
+---
+
+# 16. Content control — does the anomaly leave an objective fingerprint in the scan?
+
+Motivation (external review): the permutation control (D3) does not destroy token content, so it
+cannot separate apophenia from a real-but-position-invariant readout (see §14.2). The missing
+control, judge-independent and zero-API: do the anomaly-span tokens appear in the ANOMALOUS scan
+but not in the clean twin? Two scripts: judge/outputs/anomaly_in_scan.py (content fingerprint,
+all 11 pairs) and anomaly_propagation.py (causal downstream test, 5 aligned single-token pairs).
+Outputs: results/anomaly_in_scan.csv, anomaly_positional.csv, anomaly_propagation.csv.
+
+## 16.1 The echo trap (why the naive version is misleading)
+At late layers a lens surfaces the current token. The anomaly-span tokens are literally in the
+anomalous input at those positions, so "they appear in the anomalous scan but not the clean scan"
+is trivially true and only says the anomaly is legible at the surface (H2-compatible), NOT that
+there is an internal readout (H1). Everything below is therefore stratified by layer band.
+
+## 16.2 Content fingerprint (anomaly-span tokens surfaced anywhere; 11 pairs x 3 instruments)
+Fraction of the |T| anomaly tokens surfaced in the scan, by band:
+```
+band          in_anom  in_clean  discriminating(anom-only)
+early(0-16)    0.297    0.208     0.099
+mid(24-40)     0.568    0.370     0.203
+late(48-62)    0.906    0.682     0.250
+```
+The anomaly tokens surface more in the anomalous scan than the clean twin at every band, but the
+gap is modest at early (0.10) and rises with depth (echo). Clean surfaces most of them too (near-
+identical texts). Weak on its own -> the propagation test below is the decisive one.
+
+## 16.3 Causal propagation test (5 length-aligned single-token pairs) — the decisive one
+Compare anomalous vs clean scan top-k per position, split by region relative to the anomaly at s.
+Under causal attention only positions >= s can be affected; positions > s carry the SAME input
+token in both twins, so any difference there is the anomaly's internal contextual propagation.
+Fraction of (position, layer) cells where anomalous top-k != clean top-k:
+```
+region            early    mid    late
+upstream (<s)     0.000   0.000   0.000     <- sanity: causal, must be ~0. PASSED (exactly 0).
+at (=s)           0.956   1.000   1.000     <- trivial: input token differs (echo). Ignore.
+downstream (>s)   0.254   0.602   0.720     <- SAME input token -> internal propagation.
+```
+Per instrument (downstream only): jlens 0.29/0.58/0.71 | logit 0.20/0.64/0.74 | rlens 0.27/0.59/0.71.
+Per pair (downstream mean): bug_05 0.63, fp_01 0.47, fp_02 0.46, fp_03 0.71, fp_04 0.46.
+
+## 16.4 Reading (agent commentary, to verify — refines §14.2 / §14.9)
+- **Sanity PASSED**: upstream differ rate is exactly 0.000, confirming causal behaviour and that
+  the method (alignment, position keys) is sound.
+- **Positive result**: a one-token anomaly measurably changes the lens scan at DOWNSTREAM
+  positions (identical input there) in 25% of early-layer cells and 60% of mid-layer cells. So
+  the anomaly leaves an objective, causal, judge-independent fingerprint in the scan, at early/mid
+  layers — not merely the late-layer echo.
+- **Consequence for the hypotheses**:
+  (1) H3 "pure apophenia" is refuted at the INFORMATION level — anomalous and clean scans are
+      objectively distinguishable away from the anomaly site; a perfect reader could discriminate.
+      Apophenia remains a valid critique of the JUDGE, not of the scan's information content.
+  (2) H2 "pure text inversion" is incomplete — the signal descends into early/mid layers, past
+      the surface-token positions.
+  (3) It is still NOT lens-specific: the logit lens propagates as much (0.20/0.64) as J/R, so this
+      does not privilege the J/R-lens machinery (consistent with §14.4). Mechanistically: the
+      next-token distribution downstream shifts when the context contains the anomaly, which even
+      the logit lens reads.
+- **Caveat**: "differ" means the top-k changed, not that it changed in an anomaly-INTERPRETABLE
+  way; this proves the information exists and propagates, not that the judge reads it. The
+  judge-side results (modest AUC, fabricated evidence, order-invariance) stand and are separate.
+- **Combined picture (my read)**: the INSTRUMENT carries a real internal, causal signal; the JUDGE
+  exploits it poorly and partly apophenically. This is richer and more defensible than "no signal",
+  and it supersedes the flat "leans against H1" bottom line of §14.9: there IS internal signal, it
+  just is not lens-specific and is not cleanly recovered by the judge.

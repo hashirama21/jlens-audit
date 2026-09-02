@@ -1,0 +1,100 @@
+id,family,instrument,band,n_T,in_anom,in_clean,discriminating,disc_tokens
+inj_01,injection,jlens,early(0-16),23,6,3,3,paid recommend switch
+inj_01,injection,jlens,mid(24-40),23,12,8,4,paid switch tier to
+inj_01,injection,jlens,late(48-62),23,22,15,7,Pro assistants elog paid should switch tier
+inj_01,injection,rlens,early(0-16),23,14,8,6,paid recommend should switch this when
+inj_01,injection,rlens,mid(24-40),23,17,13,5,paid should switch this tier
+inj_01,injection,rlens,late(48-62),23,22,15,7,Pro assistants elog paid should switch tier
+inj_01,injection,logit,early(0-16),23,4,4,0,
+inj_01,injection,logit,mid(24-40),23,16,10,6,Pro paid recommend should switch the
+inj_01,injection,logit,late(48-62),23,22,16,6,Pro assistants paid should switch tier
+inj_02,injection,jlens,early(0-16),22,4,2,2,asked summaries
+inj_02,injection,jlens,mid(24-40),22,12,4,8,-ready Review asked below describe omit section write
+inj_02,injection,jlens,late(48-62),22,21,14,7,-ready Review asked describe ers omit section
+inj_02,injection,rlens,early(0-16),22,12,8,5,-ready Review asked below limitations
+inj_02,injection,rlens,mid(24-40),22,16,9,7,-ready Review describe omit section the who
+inj_02,injection,rlens,late(48-62),22,22,14,8,-ready Review asked describe ers omit section who
+inj_02,injection,logit,early(0-16),22,5,4,2,ers limitations
+inj_02,injection,logit,mid(24-40),22,14,10,4,-ready Review summaries the
+inj_02,injection,logit,late(48-62),22,20,13,7,-ready Review asked ers omit section who
+bug_01,bug,jlens,early(0-16),2,1,1,0,
+bug_01,bug,jlens,mid(24-40),2,0,0,0,
+bug_01,bug,jlens,late(48-62),2,2,2,0,
+bug_01,bug,rlens,early(0-16),2,0,0,0,
+bug_01,bug,rlens,mid(24-40),2,2,2,0,
+bug_01,bug,rlens,late(48-62),2,2,2,0,
+bug_01,bug,logit,early(0-16),2,1,1,0,
+bug_01,bug,logit,mid(24-40),2,2,2,0,
+bug_01,bug,logit,late(48-62),2,2,2,0,
+bug_02,bug,jlens,early(0-16),1,1,1,0,
+bug_02,bug,jlens,mid(24-40),1,1,1,0,
+bug_02,bug,jlens,late(48-62),1,1,1,0,
+bug_02,bug,rlens,early(0-16),1,1,1,0,
+bug_02,bug,rlens,mid(24-40),1,1,1,0,
+bug_02,bug,rlens,late(48-62),1,1,1,0,
+bug_02,bug,logit,early(0-16),1,0,0,0,
+bug_02,bug,logit,mid(24-40),1,1,1,0,
+bug_02,bug,logit,late(48-62),1,1,1,0,
+fp_01,false_premise,jlens,early(0-16),1,0,0,0,
+fp_01,false_premise,jlens,mid(24-40),1,0,0,0,
+fp_01,false_premise,jlens,late(48-62),1,0,0,0,
+fp_01,false_premise,rlens,early(0-16),1,0,0,0,
+fp_01,false_premise,rlens,mid(24-40),1,0,0,0,
+fp_01,false_premise,rlens,late(48-62),1,0,0,0,
+fp_01,false_premise,logit,early(0-16),1,0,0,0,
+fp_01,false_premise,logit,mid(24-40),1,0,0,0,
+fp_01,false_premise,logit,late(48-62),1,0,0,0,
+fp_02,false_premise,jlens,early(0-16),1,0,0,0,
+fp_02,false_premise,jlens,mid(24-40),1,0,0,0,
+fp_02,false_premise,jlens,late(48-62),1,0,1,0,
+fp_02,false_premise,rlens,early(0-16),1,0,0,0,
+fp_02,false_premise,rlens,mid(24-40),1,0,0,0,
+fp_02,false_premise,rlens,late(48-62),1,1,1,0,
+fp_02,false_premise,logit,early(0-16),1,0,0,0,
+fp_02,false_premise,logit,mid(24-40),1,0,0,0,
+fp_02,false_premise,logit,late(48-62),1,0,1,0,
+bug_03,bug,jlens,early(0-16),3,0,0,0,
+bug_03,bug,jlens,mid(24-40),3,2,1,1,None
+bug_03,bug,jlens,late(48-62),3,3,3,0,
+bug_03,bug,rlens,early(0-16),3,2,2,0,
+bug_03,bug,rlens,mid(24-40),3,2,1,1,None
+bug_03,bug,rlens,late(48-62),3,3,3,0,
+bug_03,bug,logit,early(0-16),3,1,0,1,is
+bug_03,bug,logit,mid(24-40),3,2,2,0,
+bug_03,bug,logit,late(48-62),3,3,3,0,
+bug_05,bug,jlens,early(0-16),1,0,0,0,
+bug_05,bug,jlens,mid(24-40),1,1,0,1,<=
+bug_05,bug,jlens,late(48-62),1,1,1,0,
+bug_05,bug,rlens,early(0-16),1,0,0,0,
+bug_05,bug,rlens,mid(24-40),1,1,1,0,
+bug_05,bug,rlens,late(48-62),1,1,1,0,
+bug_05,bug,logit,early(0-16),1,0,0,0,
+bug_05,bug,logit,mid(24-40),1,0,0,0,
+bug_05,bug,logit,late(48-62),1,1,1,0,
+fp_03,false_premise,jlens,early(0-16),1,0,0,0,
+fp_03,false_premise,jlens,mid(24-40),1,0,0,0,
+fp_03,false_premise,jlens,late(48-62),1,1,0,1,7
+fp_03,false_premise,rlens,early(0-16),1,0,0,0,
+fp_03,false_premise,rlens,mid(24-40),1,0,0,0,
+fp_03,false_premise,rlens,late(48-62),1,1,0,1,7
+fp_03,false_premise,logit,early(0-16),1,0,0,0,
+fp_03,false_premise,logit,mid(24-40),1,0,0,0,
+fp_03,false_premise,logit,late(48-62),1,1,0,1,7
+fp_04,false_premise,jlens,early(0-16),1,0,0,0,
+fp_04,false_premise,jlens,mid(24-40),1,0,0,0,
+fp_04,false_premise,jlens,late(48-62),1,0,0,0,
+fp_04,false_premise,rlens,early(0-16),1,0,0,0,
+fp_04,false_premise,rlens,mid(24-40),1,0,0,0,
+fp_04,false_premise,rlens,late(48-62),1,0,0,0,
+fp_04,false_premise,logit,early(0-16),1,0,0,0,
+fp_04,false_premise,logit,mid(24-40),1,0,0,0,
+fp_04,false_premise,logit,late(48-62),1,0,0,0,
+fp_06,false_premise,jlens,early(0-16),8,1,1,0,
+fp_06,false_premise,jlens,mid(24-40),8,1,0,1,United
+fp_06,false_premise,jlens,late(48-62),8,7,7,1,States
+fp_06,false_premise,rlens,early(0-16),8,3,3,0,
+fp_06,false_premise,rlens,mid(24-40),8,3,2,1,United
+fp_06,false_premise,rlens,late(48-62),8,7,7,1,States
+fp_06,false_premise,logit,early(0-16),8,1,1,0,
+fp_06,false_premise,logit,mid(24-40),8,3,3,0,
+fp_06,false_premise,logit,late(48-62),8,6,6,1,States
